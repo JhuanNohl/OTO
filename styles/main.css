@@ -10,14 +10,14 @@
     --background: #f0f2f5;
     --background-modal: #f0f2f5;
 
-    --link-light-green: #71D59A;
-    /*--link-normal-green: #000;*/
-    --link-dark-green: #239954;
+    --link-light-blue: #87CEEB;
+    /*--link-normal-blue: #000;*/
+    --link-dark-blue: #0040ff;
 
 
-    --light-green: #71D59A;
-    --normal-green: #2ECC71;
-    --dark-green: #294D38;
+    --light-blue: #87CEEB;
+    --normal-blue: #4169E1;
+    --dark-blue: #0040ff;
 
     --light-red: #EC7171;
     --normal-red: #E83F5B;
@@ -27,11 +27,11 @@
     /*--normal-blue: #000;*/
     --dark-blue: #363f5f;
 
-    --light-green-syphrao: #71D59A;
-    --normal-green-syphrao: #2ECC71;
-    --dark-green-syphrao: #294D38;
+    --light-blue-syphrao: #87CEEB;
+    --normal-blue-syphrao: #4169E1;
+    --dark-blue-syphrao: #0040ff;
 
-    --money-green: #12a454;
+    --money-blue: #87CEEB;
     --money-red: #e92929;
 
     --color-modal-overlay: rgba(0, 0, 0, 0.7);

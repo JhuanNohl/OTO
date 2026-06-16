@@ -1,13 +1,16 @@
 /* Header */
 header {
-    background: var(--dark-green);
+    background: var(--light-white);
 
     padding: 2rem 0 11rem;
     text-align: center;
 }
 #logo {
-    color: white;
-    font-weight: 100;
+    display: block;
+    width: 20rem;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
 }
 
 
@@ -24,11 +27,11 @@ h2 {
 
 /* Links & Buttons */
 a {
-   color: var(--link-dark-green);
+   color: var(--link-dark-blue);
    text-decoration: none;
 }
 a:hover {
-    color: var(--link-light-green);
+    color: var(--link-light-blue);
 }
 .button.new {
     display: inline-block;
@@ -40,7 +43,7 @@ button {
     height: 50px;
 
     color: white;
-    background: var(--normal-green);
+    background: var(--normal-blue);
 
     padding: 0;
 
@@ -54,7 +57,7 @@ button {
     cursor: pointer;
 }
 button:hover {
-    background: var(--light-green);
+    background: var(--light-blue);
 
     transition: all 0.5s;
     -webkit-transition: all 0.5s;
@@ -190,7 +193,7 @@ button:hover {
     color: white;
 }
 .card.positive {
-    background: var(--normal-green);
+    background: var(--normal-blue);
 }
 .card.negative {
     background: var(--normal-red);
@@ -261,7 +264,7 @@ td.description {
     color: var(--dark-blue);
 }
 td.income {
-    color: var(--money-green);
+    color: var(--money-blue);
 }
 td.expense {
     color: var(--money-red);

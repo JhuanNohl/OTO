@@ -21,7 +21,7 @@
 }
 /* 5 */
 ::-webkit-scrollbar-thumb {
-    background: var(--light-green);   /*default: #dad7d7*/
+    background: var(--light-blue);   /*default: #dad7d7*/
 }
 /* 6 */
 ::-webkit-scrollbar-corner {

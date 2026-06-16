@@ -2,7 +2,7 @@
     width: 4rem;
     height: 4rem;
 
-    background-color: var(--dark-green);
+    background-color: var(--dark-blue);
 
     right: 1rem;
     bottom: 1rem;
@@ -24,7 +24,7 @@
     justify-content: center;
 }
 .menu-button:hover{
-    background: var(--normal-green);
+    background: var(--normal-blue);
 
     transition: background-color .3s;
 }
@@ -33,7 +33,7 @@
     width: 2.5rem;
     height: 2.5rem;
 
-    background: var(--normal-green);
+    background: var(--normal-blue);
     border: 1px solid #ffffff80;
 
     right: 2rem;
@@ -42,7 +42,7 @@
     z-index: 10;
 }
 .menu-options:hover {
-    background: var(--dark-green);
+    background: var(--dark-blue);
 
     transition: background-color .3s;
 }
