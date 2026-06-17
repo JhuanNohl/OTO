@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-    <img src="./.github/logo-oto.jpg" width="300" heigh="150" alt="logo OTO">
+    <img src="./.github/logo-oto.jpg" width="500" heigh="300" alt="logo OTO">
 </h1>
 <p align="center">
     <img alt="Plataforma" src="https://img.shields.io/static/v1?label=Plataforma&message=Mobile/PC&color=121212&labelColor=F2C94C">
