@@ -3,11 +3,11 @@
     <img src="./.github/logo-oto.png" width="300" heigh="150" alt="logo OTO">
 </h1>
 <p align="center">
-    <img alt="Plataforma" src="https://img.shields.io/static/v1?label=Plataforma&message=Mobile/PC&color=294D38&labelColor=2ECC71">
-    <img alt="Status" src="https://img.shields.io/static/v1?label=Status&message=Em%20desenvolvimento&color=294D38&labelColor=2ECC71">
-    <img alt="Tamanho do repositório" src="https://img.shields.io/github/repo-size/JhuanNohl/OTO?color=294D38&labelColor=2ECC71">
+    <img alt="Plataforma" src="https://img.shields.io/static/v1?label=Plataforma&message=Mobile/PC&color=121212&labelColor=F2C94C">
+    <img alt="Status" src="https://img.shields.io/static/v1?label=Status&message=Em%20desenvolvimento&color=121212&labelColor=F2C94C">
+    <img alt="Tamanho do repositório" src="https://img.shields.io/github/repo-size/JhuanNohl/OTO?color=121212&labelColor=F2C94C">
     <a href="https://github.com/JhuanNohl/OTO/blob/main/LICENSE">
-        <img alt="Licença" src="https://img.shields.io/static/v1?label=License&message=MIT&color=294D38&labelColor=2ECC71">
+        <img alt="Licença" src="https://img.shields.io/static/v1?label=License&message=MIT&color=121212&labelColor=F2C94C">
     </a>
 </p>
 <p align="center">
@@ -18,7 +18,7 @@
     <a href="#licença-%EF%B8%8F">Licença</a>
 </p>
 
-# OTO <img src=".github/logo-icon.png" width="40" alt="logo icon"><img src=".github/logo-icon.png" width="40" alt="logo icon"><img src=".github/logo-icon.png" width="40" alt="logo icon">
+# <img src=".github/logo-icon.png" width="40" alt="logo icon"> OTO <img src=".github/logo-icon.png" width="40" alt="logo icon">
 OTO é um organizador financeiro em desenvolvimento, criado para registrar entradas e saídas de forma simples, acompanhar o saldo e apoiar uma visão mais clara da rotina financeira.
 
 O projeto está sendo desenvolvido de forma autoral a partir de um MVP encontrado no GitHub. A base inicial foi adaptada para validar ideias próprias de interface, organização visual e fluxo de uso.
