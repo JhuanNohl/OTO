@@ -104,3 +104,73 @@
     animation: fadein 0.5s, expand 0.5s 0.5s,stay 3s 1s, shrink 0.5s 4s, fadeout 0.5s 4.5s;
     visibility: visible;
 }
+
+@keyframes app-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(-18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#logo,
+#container-calendar-and-opening-balance,
+#balance .card,
+#transaction,
+.menu-button,
+footer {
+    animation: app-reveal 0.65s ease forwards;
+    opacity: 0;
+}
+
+#logo {
+    animation-delay: 0.05s;
+}
+
+#container-calendar-and-opening-balance {
+    animation-delay: 0.16s;
+}
+
+#balance .card:nth-of-type(1) {
+    animation-delay: 0.28s;
+}
+
+#balance .card:nth-of-type(2) {
+    animation-delay: 0.38s;
+}
+
+#balance .card:nth-of-type(3) {
+    animation-delay: 0.48s;
+}
+
+#balance .card:nth-of-type(4) {
+    animation-delay: 0.58s;
+}
+
+#transaction {
+    animation-delay: 0.7s;
+}
+
+.menu-button {
+    animation-delay: 0.82s;
+}
+
+footer {
+    animation-delay: 0.9s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #logo,
+    #container-calendar-and-opening-balance,
+    #balance .card,
+    #transaction,
+    .menu-button,
+    footer {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}

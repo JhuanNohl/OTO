@@ -22,9 +22,18 @@
 }
 .modal {
     background: var(--background-modal);
+    color: var(--text-dark);
 
     padding: 2.4rem;
     position: relative;
     
     z-index: 1;
+}
+
+.modal h2,
+.modal label,
+.modal small,
+.modal p,
+.modal span {
+    color: var(--text-dark);
 }

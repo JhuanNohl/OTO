@@ -1,11 +1,19 @@
 /* Form */
 #form {
     max-width: 500px;
+    color: var(--text-dark);
 }
 #form h2 {
+    color: var(--text-dark);
     margin-top: 0;
 }
-select, input { color: #757575; }
+select, input {
+    color: var(--text-dark);
+}
+select::placeholder,
+input::placeholder {
+    color: var(--text-muted);
+}
 select {
     width: 100%;
 
@@ -47,7 +55,7 @@ input {
     gap: 1rem;
 }
 .input-group.switch .switch-group {
-    color: #888888;
+    color: var(--text-dark);
     font-size: 0.875rem;
 
     border-radius: 0.5rem;
@@ -60,7 +68,8 @@ input {
     gap: 0.25rem;
 }
 small.help-for-modal {
-    opacity: 0.4;
+    color: var(--text-dark);
+    opacity: 0.65;
 }
 .input-group.actions {
     display: flex;
@@ -101,7 +110,7 @@ small.help-for-modal {
     width: 100%;
     height: 5rem;
 
-    color: #969cb3;
+    color: var(--text-dark);
     border: 1px dashed #363f5f33;
 
     padding: 0 1rem;
