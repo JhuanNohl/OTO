@@ -1,13 +1,14 @@
 /* Header */
 header {
-    background: var(--light-white);
+    background: whitesmoke;
 
     padding: 2rem 0 11rem;
     text-align: center;
 }
+
 #logo {
     display: block;
-    width: 20rem;
+    width: 15rem;
     max-width: 100%;
     height: auto;
     margin: 0 auto;
@@ -17,8 +18,9 @@ header {
 
 /* Titles */
 h2 {
-    color: var(--dark-blue);
-    font-weight: normal; /* = 400 */
+    color: var(--text-light);
+    font-weight: normal;
+    /* = 400 */
 
     margin: 3.2rem 0 0.8rem;
 }
@@ -27,12 +29,14 @@ h2 {
 
 /* Links & Buttons */
 a {
-   color: var(--link-dark-blue);
-   text-decoration: none;
+    color: var(--primary-yellow);
+    text-decoration: none;
 }
+
 a:hover {
-    color: var(--link-light-blue);
+    color: var(--primary-yellow-hover);
 }
+
 .button.new {
     display: inline-block;
     margin-bottom: 0.8rem;
@@ -42,29 +46,23 @@ button {
     width: 100%;
     height: 50px;
 
-    color: white;
-    background: var(--normal-blue);
+    color: var(--text-dark);
+    background: var(--primary-yellow);
 
     padding: 0;
 
     border: none;
     border-radius: 0.25rem;
-    -webkit-border-radius: 0.25rem;
-    -moz-border-radius: 0.25rem;
-    -ms-border-radius: 0.25rem;
-    -o-border-radius: 0.25rem;
 
     cursor: pointer;
 }
+
 button:hover {
-    background: var(--light-blue);
+    background: var(--primary-yellow-hover);
 
     transition: all 0.5s;
-    -webkit-transition: all 0.5s;
-    -moz-transition: all 0.5s;
-    -ms-transition: all 0.5s;
-    -o-transition: all 0.5s;
 }
+
 .button.cancel {
     height: 50px;
 
@@ -76,21 +74,14 @@ button:hover {
 
     border: 1px solid var(--normal-red);
     border-radius: 0.25rem;
-    -webkit-border-radius: 0.25rem;
-    -moz-border-radius: 0.25rem;
-    -ms-border-radius: 0.25rem;
-    -o-border-radius: 0.25rem;
 
     opacity: 0.6;
 }
+
 .button.cancel:hover {
     opacity: 1;
 
     transition: all 0.3s;
-    -webkit-transition: all 0.3s;
-    -moz-transition: all 0.3s;
-    -ms-transition: all 0.3s;
-    -o-transition: all 0.3s;
 }
 
 
@@ -107,10 +98,11 @@ button:hover {
     justify-content: center;
     gap: 1rem;
 }
+
 #container-calendar-and-opening-balance h3#year-calendar {
-    background: linear-gradient(180deg, #2ECC71 0%, #294D38 100%);
+    background: var(--primary-yellow);
     border-radius: 0.5rem 0.5rem 0 0;
-    color: #E5E5E5;
+    color: var(--text-dark);
     font-size: 1rem;
     font-weight: 600;
 
@@ -122,8 +114,9 @@ button:hover {
 
     display: none;
 }
+
 #balance h2 {
-    color: white;
+    color: var(--text-light);
     margin-top: 0;
 }
 
@@ -133,9 +126,9 @@ button:hover {
 .mini-card {
     width: fit-content;
 
-    background-color: #296241;
-    border: 3px solid #2ecc71;
-    color: #2ecc71;
+    background-color: var(--primary-yellow);
+    border: 3px solid var(--black);
+    color: var(--text-dark);
 
     padding: 0.5rem 1rem;
 
@@ -146,7 +139,10 @@ button:hover {
     border-radius: 0.5rem;
 
     cursor: pointer;
+
+    box-shadow: 0 8px 24px var(--shadow-yellow);
 }
+
 .mini-card h3 {
     font-weight: 500;
 
@@ -154,15 +150,27 @@ button:hover {
     align-items: center;
     gap: 0.25rem;
 }
+
+.opening-balance-icon {
+    color: var(--text-dark);
+    width: 1.1875rem;
+    height: 1.125rem;
+}
+
 .mini-card p {
-    color: #E5E5E5;
+    color: var(--text-dark);
 
     font-size: 1rem;
     font-weight: 500;
 }
+
+.mini-card .opening-balance-display {
+    color: var(--text-dark);
+}
+
 .card {
-    color: var(--dark-blue);
-    background: white;
+    color: var(--text-dark);
+    background: var(--card-white);
     border-radius: 0.5rem;
 
     padding: 1rem;
@@ -172,7 +180,10 @@ button:hover {
     flex-direction: column;
     justify-content: space-between;
     gap: 1rem;
+
+    box-shadow: 0 8px 24px var(--shadow);
 }
+
 .card h3 {
     font-weight: normal;
     font-size: 1rem;
@@ -181,23 +192,53 @@ button:hover {
     align-items: center;
     justify-content: space-between;
 }
+
 .card h3 img {
     width: 1.125rem;
 }
+
 .card p {
     font-weight: normal;
     font-size: 1.5rem;
 }
-.card.total-month,
-.card.total-balance {
-    color: white;
+
+.balance-card-left {
+    background: var(--card-white);
 }
+
+.balance-card-right {
+    background: var(--card-white);
+}
+
+.balance-card-left-title,
+.balance-card-left-value {
+    color: var(--text-dark);
+}
+
+.balance-card-right-title,
+.balance-card-right-value {
+    color: var(--text-dark);
+}
+
+.balance-card-right-icon {
+    color: var(--text-dark);
+    width: 1.125rem;
+    height: 1.125rem;
+
+    display: inline-block;
+}
+
 .card.positive {
-    background: var(--normal-blue);
+    background: var(--primary-yellow);
+    color: var(--text-dark);
+    box-shadow: 0 8px 24px var(--shadow-yellow);
 }
+
 .card.negative {
     background: var(--normal-red);
+    color: var(--text-light);
 }
+
 
 
 /* Table */
@@ -207,68 +248,77 @@ button:hover {
     display: block;
     overflow-x: auto;
 }
+
 #data-table {
     width: 100%;
-    color: var(--light-blue);
+    color: var(--text-dark);
 }
-table thead tr th:first-child,
-table tbody tr td:first-child { /*1°Filho*/
-    border-radius: 0.25rem 0 0 0.25rem;
-    -webkit-border-radius: 0.25rem 0 0 0.25rem;
-    -moz-border-radius: 0.25rem 0 0 0.25rem;
-    -ms-border-radius: 0.25rem 0 0 0.25rem;
-    -o-border-radius: 0.25rem 0 0 0.25rem;
-}
-table thead tr th:last-child,
-table tbody tr td:last-child { /*~°UltimoFilho*/
-    border-radius: 0 0.25rem 0.25rem 0;
-    -webkit-border-radius: 0 0.25rem 0.25rem 0;
-    -moz-border-radius: 0 0.25rem 0.25rem 0;
-    -ms-border-radius: 0 0.25rem 0.25rem 0;
-    -o-border-radius: 0 0.25rem 0.25rem 0;
-}
-table thead th {
-    background: white;
 
+table thead tr th:first-child,
+table tbody tr td:first-child {
+    border-radius: 0.25rem 0 0 0.25rem;
+}
+
+table thead tr th:last-child,
+table tbody tr td:last-child {
+    border-radius: 0 0.25rem 0.25rem 0;
+}
+
+table thead th {
+    background: var(--primary-yellow-soft);
+
+    color: var(--text-dark);
     font-weight: normal;
     padding: 1rem 2rem;
 
     text-align: left;
 }
+
 table tbody tr {
-    opacity: 0.7;
+    opacity: 0.85;
     cursor: pointer;
 }
+
 table tbody tr:hover {
     opacity: 1;
 }
+
 table tbody tr.deposit-activated td {
-    background-color: #D6FFE7;
+    background-color: var(--primary-yellow);
     border-radius: 0.25rem;
 }
+
 tr.deposit-not-activated {
-    background-color: #FFE4E9;
+    background-color: var(--primary-yellow);
     border-radius: 0.25rem;
 }
+
 tr.deposit-activated td,
 tr.deposit-not-activated td {
     background-color: transparent;
 }
-table tbody td {
-    background: white;
-    border-spacing: 0 0.5rem; /* Vertical | Horizontal */
 
+table tbody td {
+    background: var(--primary-yellow);
+    border-spacing: 0 0.5rem;
+    /* Vertical | Horizontal */
+
+    color: var(--text-dark);
     padding: 1rem 2rem;
 }
+
 td.description {
-    color: var(--dark-blue);
+    color: var(--text-dark);
 }
+
 td.income {
-    color: var(--money-blue);
+    color: var(--money-green);
 }
+
 td.expense {
     color: var(--money-red);
 }
+
 td.center-item {
     display: flex;
     justify-content: center;
@@ -285,8 +335,8 @@ img.remove {
 
 /* Footer */
 footer {
-    color: var(--dark-blue);
-    opacity: 0.6;
+    color: var(--text-muted);
+    opacity: 0.8;
 
     padding: 4rem 0 2rem;
     text-align: center;

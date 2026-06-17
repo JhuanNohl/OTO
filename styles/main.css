@@ -1,48 +1,67 @@
 /* Global */
 *,
 *:before,
-*:after{
+*:after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
 :root {
-    --background: #f0f2f5;
-    --background-modal: #f0f2f5;
+    /* Base */
+    --background: #121212;
+    --background-secondary: #1E1E1E;
+    --background-modal: #F0F2F5;
 
-    --link-light-blue: #87CEEB;
-    /*--link-normal-blue: #000;*/
-    --link-dark-blue: #0040ff;
+    /* Cores principais */
+    --primary-yellow: #F2C94C;
+    --primary-yellow-hover: #D9B13F;
+    --primary-yellow-soft: #F7E3A0;
 
+    --black: #050505;
+    --graphite: #121212;
+    --graphite-light: #1E1E1E;
 
-    --light-blue: #87CEEB;
-    --normal-blue: #4169E1;
-    --dark-blue: #0040ff;
+    /* Cards */
+    --card-white: #FAFAFA;
+    --card-yellow: #F2C94C;
 
+    /* Textos */
+    --text-light: #F5F5F5;
+    --text-dark: #111111;
+    --text-muted: #8C8C8C;
+    --text-muted-light: #B8B8B8;
+
+    /* Bordas e divisórias */
+    --border: #333333;
+    --border-light: #E5E5E5;
+
+    /* Feedback */
     --light-red: #EC7171;
     --normal-red: #E83F5B;
     --dark-red: #693232;
 
-    --light-blue: #969cb3;
-    /*--normal-blue: #000;*/
-    --dark-blue: #363f5f;
+    /* Money */
+    --money-green: #23D18B;
+    --money-red: #E92929;
 
-    --light-blue-syphrao: #87CEEB;
-    --normal-blue-syphrao: #4169E1;
-    --dark-blue-syphrao: #0040ff;
-
-    --money-blue: #87CEEB;
-    --money-red: #e92929;
-
+    /* Modal / Overlay */
     --color-modal-overlay: rgba(0, 0, 0, 0.7);
-    --shadow: #999;
+
+    /* Sombras */
+    --shadow: rgba(0, 0, 0, 0.25);
+    --shadow-yellow: rgba(242, 201, 76, 0.18);
 }
+
+html {
+    font-size: 93.75%;
+    /* 15px */
+}
+
 body {
     background: var(--background);
+    color: var(--text-light);
     font-family: 'Poppins', sans-serif;
-}
-html {
-    font-size: 93.75%; /*15px*/
 }
 
 .sr-only {

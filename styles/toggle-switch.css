@@ -29,7 +29,7 @@
     content: '';
     width: 1rem;
     height: 1rem;
-    background-color: #969CB2;
+    background-color: #646464;
     position: absolute;
     left: 0;
     top: 0;
@@ -37,6 +37,6 @@
     border-radius: 50%;
     }
 .toggle input:checked::after {
-    background-color: #2ECC71;
+    background-color: var(--primary-yellow);
     transform: translateX(1rem);
 }

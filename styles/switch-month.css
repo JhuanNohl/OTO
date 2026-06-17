@@ -1,10 +1,10 @@
 #switch-month {
     width: 14rem;
 
-    background-color: #296241;
-    border: 3px solid #2ecc71;
+    background-color: var(--black);
+    border: 3px solid var(--primary-yellow);
     border-radius: 0.5rem;
-    color: #2ecc71;
+    color: var(--text-light);
 
     position: relative;
 
@@ -57,13 +57,13 @@
     z-index: 50;
 }
 .switch-month-button:hover {
-    background-color: #296241;
+    background-color: var(--primary-yellow);
     border-color: transparent;
 }
 #switch-previous-month-button.switch-month-button:not([disabled]):hover,
 #switch-next-month-button.switch-month-button:not([disabled]):hover  {
-    background-color: #275D3E;
-    border-color: #2ECC71;
+    background-color: var(--black);
+    border-color: var(--primary-yellow);
 }
 #switch-previous-month-button.switch-month-button:disabled,
 #switch-next-month-button.switch-month-button:disabled {

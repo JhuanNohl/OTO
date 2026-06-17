@@ -17,11 +17,11 @@
 }
 ::-webkit-scrollbar,
 ::-webkit-scrollbar:horizontal {
-    background: var(--background);   /*default: #F4F4F4*/
+    background: var(--background);
 }
 /* 5 */
 ::-webkit-scrollbar-thumb {
-    background: var(--light-blue);   /*default: #dad7d7*/
+    background: var(--primary-yellow);
 }
 /* 6 */
 ::-webkit-scrollbar-corner {
