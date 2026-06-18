@@ -42,6 +42,7 @@ const CreateTransactionModal = {
             .add("active")
 
         DOM.createTransactionModal()
+        DOM.updateTransactionPreview()
     },
     close() {
         document
@@ -326,6 +327,9 @@ const Storage = {
     getCategories() {
         return JSON.parse(localStorage.getItem("dev.finances:categories")) || ['lazer', 'carro', 'casa', 'trabalho']
     },
+    getCategoryBudgets() {
+        return JSON.parse(localStorage.getItem("dev.finances:categoryBudgets")) || {}
+    },
     set(transactions) {
         localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions))
     },
@@ -365,10 +369,19 @@ const Storage = {
         categories.push(category)
         localStorage.setItem("dev.finances:categories", JSON.stringify(categories))
     },
+    updateCategoryBudget(category, budget) {
+        let budgets = Storage.getCategoryBudgets()
+        budgets[category] = budget
+        localStorage.setItem("dev.finances:categoryBudgets", JSON.stringify(budgets))
+    },
     setCategory(category) {
         let categories = Storage.getCategories()
         categories = categories.filter(item => item !== category)
         localStorage.setItem("dev.finances:categories", JSON.stringify(categories))
+
+        let budgets = Storage.getCategoryBudgets()
+        delete budgets[category]
+        localStorage.setItem("dev.finances:categoryBudgets", JSON.stringify(budgets))
     }
 }
 
@@ -429,6 +442,17 @@ const Transaction = {
         })
         return expense
     },
+    categoryExpense(category, monthIndex = Calendar.activeMonth()) {
+        let expense = 0
+
+        Storage.getTransactions(monthIndex).forEach(transaction => {
+            if (transaction.deposit && transaction.category === category && transaction.amount < 0) {
+                expense += Math.abs(transaction.amount)
+            }
+        })
+
+        return expense
+    },
     totalMonth(allValues=false) {
         const monthIndex = Calendar.activeMonth()
         const openingBalance = Number(Storage.getOpeningBalance(monthIndex))
@@ -460,6 +484,58 @@ const Transaction = {
         }
 
         return totalBalance
+    },
+    financialHealth() {
+        const incomes = Transaction.incomes()
+        const expenses = Math.abs(Transaction.expenses())
+
+        if (incomes === 0 && expenses === 0) {
+            return {
+                status: "neutral",
+                title: "Sem dados",
+                message: "Registre entradas e saídas para acompanhar sua saúde financeira do mês."
+            }
+        }
+
+        if (incomes === 0) {
+            return {
+                status: "critical",
+                title: "Crítico",
+                message: "Você registrou saídas sem entradas confirmadas neste mês."
+            }
+        }
+
+        const usagePercent = Math.round((expenses / incomes) * 100)
+
+        if (usagePercent < 50) {
+            return {
+                status: "excellent",
+                title: "Excelente",
+                message: `Você manteve seus gastos em ${usagePercent}% das entradas deste mês.`
+            }
+        }
+
+        if (usagePercent <= 80) {
+            return {
+                status: "healthy",
+                title: "Atenção saudável",
+                message: `Você usou ${usagePercent}% das suas entradas neste mês.`
+            }
+        }
+
+        if (usagePercent <= 100) {
+            return {
+                status: "warning",
+                title: "Atenção",
+                message: `Suas saídas consumiram ${usagePercent}% das entradas deste mês.`
+            }
+        }
+
+        return {
+            status: "critical",
+            title: "Crítico",
+            message: "Suas saídas passaram das entradas deste mês."
+        }
     }
 }
 
@@ -492,9 +568,12 @@ const DOM = {
     },
     categoryModal() {
         const categoryGroup = document.querySelector(".category-group")
+        const categoryBudgetGroup = document.querySelector(".category-budget-group")
         const categories = Storage.getCategories()
+        const budgets = Storage.getCategoryBudgets()
 
         categoryGroup.innerHTML = ""
+        categoryBudgetGroup.innerHTML = ""
         for (let index = 0; index < categories.length; index++) {
             const category = categories[index]
 
@@ -503,6 +582,43 @@ const DOM = {
             p.innerHTML = category
 
             categoryGroup.appendChild(p)
+
+            const budget = Number(budgets[category] || 0)
+            const spent = Transaction.categoryExpense(category)
+            const remaining = budget - spent
+            const percent = budget > 0 ? Math.min(Math.round((spent / budget) * 100), 999) : 0
+            const status = budget === 0 ? "neutral" : percent >= 100 ? "critical" : percent >= 80 ? "warning" : "healthy"
+
+            const article = document.createElement("article")
+            article.classList.add("category-budget-card", status)
+            article.innerHTML = `
+                <strong>${String(category)[0].toUpperCase() + String(category).substring(1)}</strong>
+                <span>Limite: ${budget > 0 ? Utils.formatCurrency(budget) : "sem limite"}</span>
+                <span>Gasto: ${Utils.formatCurrency(spent)}</span>
+                <span>Restante: ${budget > 0 ? Utils.formatCurrency(remaining) : "não definido"}</span>
+                <span>Status: ${budget > 0 ? `${percent}% usado` : "configure um limite"}</span>
+                <div class="category-budget-edit">
+                    <input type="text" placeholder="Novo limite" inputmode="decimal" value="${budget > 0 ? Utils.formatSimpleAmountToText(String(budget)) : ""}">
+                    <button type="button">Salvar</button>
+                </div>
+            `
+            article
+                .querySelector("button")
+                .addEventListener("click", () => {
+                    const input = article.querySelector("input")
+                    const value = input.value.trim()
+
+                    if (value !== "" && isNaN(Number(String(value).replace(",", ".")))) {
+                        toastError("Por favor, preencha o limite corretamente!")
+                        return
+                    }
+
+                    Storage.updateCategoryBudget(category, value === "" ? 0 : Utils.formatAmount(value))
+                    DOM.categoryModal()
+                    DOM.updateTransactionPreview()
+                })
+
+            categoryBudgetGroup.appendChild(article)
         }
     },
     createTransactionModal() {
@@ -577,6 +693,7 @@ const DOM = {
         const currency = Storage.getOpeningBalanceCurrency()
         const {incomes, expenses, totalMonth} = Transaction.totalMonth(true)
         const totalBalance = Transaction.totalBalance()
+        const financialHealth = Transaction.financialHealth()
 
         document
             .querySelector("#incomeDisplay")
@@ -590,6 +707,73 @@ const DOM = {
         document
             .querySelector("#totalBalanceDisplay")
             .innerHTML = Utils.formatCurrency(totalBalance, currency)
+        DOM.updateFinancialHealth(financialHealth)
+    },
+    updateFinancialHealth(financialHealth) {
+        const card = document.querySelector("#financialHealthCard")
+
+        card.classList.remove("excellent", "healthy", "warning", "critical", "neutral")
+        card.classList.add(financialHealth.status)
+
+        document
+            .querySelector("#financialHealthBadge")
+            .innerHTML = financialHealth.title
+        document
+            .querySelector("#financialHealthMessage")
+            .innerHTML = financialHealth.message
+    },
+    updateTransactionPreview() {
+        const preview = document.querySelector("#transaction-preview")
+        const category = Form.category.value
+        const amountValue = Form.amount.value
+        const deposit = Form.deposit.checked
+        const currency = Storage.getOpeningBalanceCurrency()
+
+        preview.classList.remove("positive", "warning", "critical", "neutral")
+
+        if (amountValue.trim() === "" || isNaN(Number(String(amountValue).replace(",", ".")))) {
+            preview.classList.add("neutral")
+            preview.innerHTML = `
+                <strong>Prévia</strong>
+                <p>Informe os dados da transação para visualizar o impacto no saldo.</p>
+            `
+            return
+        }
+
+        const amount = Utils.formatAmount(amountValue)
+
+        if (!deposit) {
+            preview.classList.add("neutral")
+            preview.innerHTML = `
+                <strong>Prévia</strong>
+                <p>Esta transação ficará aguardando depósito e ainda não altera o saldo.</p>
+            `
+            return
+        }
+
+        const currentBalance = Transaction.totalBalance()
+        const nextBalance = currentBalance + amount
+        const status = nextBalance < 0 ? "critical" : amount < 0 ? "warning" : "positive"
+        let message = amount < 0
+            ? `Seu saldo será reduzido de ${Utils.formatCurrency(currentBalance, currency)} para ${Utils.formatCurrency(nextBalance, currency)}.`
+            : `Seu saldo aumentará para ${Utils.formatCurrency(nextBalance, currency)}.`
+
+        if (category !== "-1" && amount < 0) {
+            const budget = Number(Storage.getCategoryBudgets()[category] || 0)
+
+            if (budget > 0) {
+                const spent = Transaction.categoryExpense(category)
+                const nextSpent = spent + Math.abs(amount)
+                const percent = Math.round((nextSpent / budget) * 100)
+                message += ` Categoria: ${percent}% do limite mensal usado.`
+            }
+        }
+
+        preview.classList.add(status)
+        preview.innerHTML = `
+            <strong>${nextBalance < 0 ? "Atenção" : "Prévia"}</strong>
+            <p>${nextBalance < 0 ? "Essa despesa deixará seu saldo negativo. " : ""}${message}</p>
+        `
     },
     updateCalendar() {
         const activeMonth = Calendar.activeMonth()
@@ -744,6 +928,7 @@ const Form = {
         Form.amount.value      = ""
         Form.date.value        = ""
         Form.deposit.checked   = true
+        DOM.updateTransactionPreview()
     },
     submit(event) {
         event.preventDefault()
@@ -874,16 +1059,22 @@ const OpeningBalanceForm = {
 }
 const CreateCategoryForm = {
     category: document.querySelector("input#create-category"),
+    budget: document.querySelector("input#create-category-budget"),
     getValues() {
         return {
-            category: CreateCategoryForm.category.value
+            category: CreateCategoryForm.category.value,
+            budget: CreateCategoryForm.budget.value
         }
     },
     validateFields() {
-        let {category} = CreateCategoryForm.getValues()
+        let {category, budget} = CreateCategoryForm.getValues()
 
         if (category.trim() === "") {
             throw new Error("Por favor, preencha o campo!")
+        }
+
+        if (budget.trim() !== "" && isNaN(Number(String(budget).replace(",", ".")))) {
+            throw new Error("Por favor, preencha o limite corretamente!")
         }
 
         category = String(category).toLowerCase()
@@ -894,17 +1085,20 @@ const CreateCategoryForm = {
         }
     },
     formatValues() {
-        let {category} = CreateCategoryForm.getValues()
+        let {category, budget} = CreateCategoryForm.getValues()
 
         category = String(category).toLowerCase()
+        budget = budget.trim() === "" ? 0 : Utils.formatAmount(budget)
 
-        return category
+        return {category, budget}
     },
-    saveCategory(category) {
+    saveCategory({category, budget}) {
         Storage.updateCategory(category)
+        Storage.updateCategoryBudget(category, budget)
     },
     clearFields() {
         CreateCategoryForm.category.value = ""
+        CreateCategoryForm.budget.value = ""
     },
     submit(event) {
         event.preventDefault()
@@ -999,6 +1193,11 @@ const App = {
     }
 }
 App.initAll()
+
+Form.category.addEventListener("change", DOM.updateTransactionPreview)
+Form.amount.addEventListener("input", DOM.updateTransactionPreview)
+Form.date.addEventListener("change", DOM.updateTransactionPreview)
+Form.deposit.addEventListener("change", DOM.updateTransactionPreview)
 
 
 

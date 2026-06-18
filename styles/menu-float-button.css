@@ -64,6 +64,55 @@
     border-color: var(--primary-yellow);
 }
 
+.menu-options::before {
+    content: attr(data-label);
+    min-width: max-content;
+
+    color: var(--text-dark);
+    background: var(--primary-yellow);
+    border: 1px solid var(--primary-yellow);
+    border-radius: 0.25rem;
+
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    padding: 0.55rem 0.75rem;
+
+    position: absolute;
+    right: calc(100% + 0.75rem);
+    top: 50%;
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(0.5rem, -50%);
+    transition: opacity .2s, transform .2s;
+}
+
+.menu-options::after {
+    content: "";
+
+    border-top: 0.35rem solid transparent;
+    border-bottom: 0.35rem solid transparent;
+    border-left: 0.35rem solid var(--primary-yellow);
+
+    position: absolute;
+    right: calc(100% + 0.42rem);
+    top: 50%;
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(0.5rem, -50%);
+    transition: opacity .2s, transform .2s;
+}
+
+.menu-options:hover::before,
+.menu-options:hover::after,
+.menu-options:focus-visible::before,
+.menu-options:focus-visible::after {
+    opacity: 1;
+    transform: translate(0, -50%);
+}
+
 .menu-options.active {
     opacity: 1;
     pointer-events: auto;

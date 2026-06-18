@@ -4,6 +4,8 @@ header {
 
     padding: 2rem 0 11rem;
     text-align: center;
+
+    position: relative;
 }
 
 #logo {
@@ -123,8 +125,6 @@ button:hover {
     color: var(--text-light);
     margin-top: 0;
 }
-
-
 
 /* Cards */
 .mini-card {
@@ -310,6 +310,120 @@ button:hover {
 .card.negative {
     background: var(--normal-red);
     color: var(--text-light);
+}
+
+#financial-health {
+    width: min(18rem, calc(100vw - 2rem));
+
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 5;
+}
+
+.financial-health-card {
+    width: 100%;
+    min-height: 4.25rem;
+
+    background: var(--card-white);
+    border: 1px solid var(--border-light);
+    border-left: 0.35rem solid var(--primary-yellow);
+    border-radius: 0.5rem;
+    color: var(--text-dark);
+
+    padding: 0.85rem 1rem;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.45rem;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.financial-health-card h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.financial-health-card p {
+    color: var(--text-dark);
+    font-size: 0.75rem;
+    line-height: 1.35;
+    text-align: left;
+}
+
+.financial-health-badge {
+    width: fit-content;
+    min-width: max-content;
+
+    border-radius: 999px;
+    color: var(--text-dark);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.35rem 0.5rem;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.financial-health-badge::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+
+    background: var(--primary-yellow);
+    border-radius: 100%;
+    box-shadow: 0 0 10px currentColor;
+}
+
+.financial-health-card.neutral,
+.financial-health-card.healthy,
+.financial-health-card.warning {
+    border-left-color: var(--primary-yellow);
+}
+
+.financial-health-card.neutral .financial-health-badge,
+.financial-health-card.healthy .financial-health-badge,
+.financial-health-card.warning .financial-health-badge {
+    background: var(--primary-yellow-soft);
+}
+
+.financial-health-card.neutral .financial-health-badge::before,
+.financial-health-card.healthy .financial-health-badge::before,
+.financial-health-card.warning .financial-health-badge::before {
+    background: var(--primary-yellow);
+}
+
+.financial-health-card.excellent {
+    border-left-color: var(--money-green);
+}
+
+.financial-health-card.excellent .financial-health-badge {
+    background: #DFF7EA;
+}
+
+.financial-health-card.excellent .financial-health-badge::before {
+    background: var(--money-green);
+}
+
+.financial-health-card.critical {
+    border-left-color: var(--normal-red);
+}
+
+.financial-health-card.critical .financial-health-badge {
+    background: #FCE1E6;
+}
+
+.financial-health-card.critical .financial-health-badge::before {
+    background: var(--normal-red);
 }
 
 

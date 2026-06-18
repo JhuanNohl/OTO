@@ -74,6 +74,37 @@ small.help-for-modal {
     color: var(--text-dark);
     opacity: 0.65;
 }
+.transaction-preview {
+    color: var(--text-dark);
+    background: var(--card-white);
+    border-left: 0.35rem solid var(--primary-yellow);
+    border-radius: 0.5rem;
+
+    padding: 0.85rem 1rem;
+    margin-top: 1rem;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+.transaction-preview strong {
+    display: block;
+    font-size: 0.8125rem;
+    margin-bottom: 0.35rem;
+}
+.transaction-preview p {
+    color: var(--text-dark);
+    font-size: 0.8125rem;
+    line-height: 1.35;
+}
+.transaction-preview.positive {
+    border-left-color: var(--money-green);
+}
+.transaction-preview.warning,
+.transaction-preview.neutral {
+    border-left-color: var(--primary-yellow);
+}
+.transaction-preview.critical {
+    border-left-color: var(--normal-red);
+}
 .input-group.actions {
     display: flex;
     align-items: center;
@@ -87,7 +118,7 @@ small.help-for-modal {
 #category-modal .modal {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 2rem;
 }
 
 #category-modal .input-group,
@@ -108,6 +139,73 @@ small.help-for-modal {
 }
 #category-modal #form-delete-category button {
     background-color: #E83F5B;
+}
+#category-modal #form-create-category form {
+    gap: 0.5rem;
+}
+#category-modal #form-create-category .input-group {
+    flex: 1;
+}
+#category-budget-panel h2 {
+    margin-bottom: 0.75rem;
+}
+.category-budget-group {
+    max-height: 13rem;
+
+    display: grid;
+    gap: 0.75rem;
+
+    overflow: auto;
+}
+.category-budget-card {
+    color: var(--text-dark);
+    background: var(--card-white);
+    border: 1px solid var(--border-light);
+    border-left: 0.35rem solid var(--primary-yellow);
+    border-radius: 0.5rem;
+
+    padding: 0.85rem 1rem;
+
+    display: grid;
+    gap: 0.35rem;
+}
+.category-budget-card strong,
+.category-budget-card span {
+    color: var(--text-dark);
+}
+.category-budget-card strong {
+    font-size: 0.875rem;
+}
+.category-budget-card span {
+    font-size: 0.75rem;
+}
+.category-budget-edit {
+    margin-top: 0.4rem;
+
+    display: flex;
+    align-items: center;
+}
+.category-budget-edit input {
+    border: 1px solid var(--border-light);
+    border-radius: 0.25rem 0 0 0.25rem;
+    font-size: 0.75rem;
+    padding: 0.6rem;
+}
+.category-budget-edit button {
+    background: var(--primary-yellow);
+    border-radius: 0 0.25rem 0.25rem 0;
+    font-size: 0.75rem;
+    padding: 0.65rem 0.85rem;
+}
+.category-budget-card.healthy {
+    border-left-color: var(--money-green);
+}
+.category-budget-card.warning,
+.category-budget-card.neutral {
+    border-left-color: var(--primary-yellow);
+}
+.category-budget-card.critical {
+    border-left-color: var(--normal-red);
 }
 #category-modal #form-delete-category .category-group {
     width: 100%;

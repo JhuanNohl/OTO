@@ -32,6 +32,17 @@
 
 <body>
     <header>
+        <section id="financial-health">
+            <h2 class="sr-only">Saúde financeira</h2>
+            <div id="financialHealthCard" class="financial-health-card">
+                <h3>
+                    <span>Saúde financeira</span>
+                    <span id="financialHealthBadge" class="financial-health-badge">Sem dados</span>
+                </h3>
+                <p id="financialHealthMessage">Registre entradas e saídas para acompanhar sua saúde financeira do mês.</p>
+            </div>
+        </section>
+
         <img id="logo" src="./assets/logo.png" alt="logo dev.finance$"/>
     </header>
 
@@ -151,6 +162,11 @@
                     </div>
 
                     <small class="help-for-modal">Use o sinal - (negativo) para despesas e , (vírgula) para casas decimais</small>
+
+                    <div id="transaction-preview" class="transaction-preview neutral">
+                        <strong>Prévia</strong>
+                        <p>Informe os dados da transação para visualizar o impacto no saldo.</p>
+                    </div>
 
                     <div class="input-group">
                         <label for="date" class="sr-only">Data</label>
@@ -275,9 +291,18 @@
                         <label for="create-category" class="sr-only">Categoria</label>
                         <input type="text" id="create-category" name="create-category" placeholder="Categoria">
                     </div>
+                    <div class="input-group">
+                        <label for="create-category-budget" class="sr-only">Limite mensal</label>
+                        <input type="text" id="create-category-budget" name="create-category-budget" placeholder="Limite mensal" inputmode="decimal">
+                    </div>
 
                     <button type="submit">Salvar</button>
                 </form>
+            </div>
+            <div id="category-budget-panel">
+                <h2>Orçamento por Categoria</h2>
+
+                <div class="category-budget-group"></div>
             </div>
             <div id="form-delete-category">
                 <h2>Deletar Categoria</h2>
@@ -306,10 +331,10 @@
     <button onclick="MenuButton.toggle()" class="menu-button">
         <img src="./assets/menu.svg" alt="Menu" width="32px">
     </button>
-    <button onclick="CreateTransactionModal.open()" title="Adicionar nova transação" class="add-transaction-button menu-options">
+    <button onclick="CreateTransactionModal.open()" aria-label="Adicionar nova transação" data-label="Adicionar nova transação" class="add-transaction-button menu-options">
         <img src="./assets/transfer.svg" alt="Adicionar transação" width="16px">
     </button>
-    <button onclick="CategoryModal.open()" title="Adicionar nova categoria" class="add-category-button menu-options">
+    <button onclick="CategoryModal.open()" aria-label="Adicionar nova categoria" data-label="Adicionar nova categoria" class="add-category-button menu-options">
         <img src="./assets/category.svg" alt="Adicionar categoria" width="16px">
     </button>
 

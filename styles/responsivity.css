@@ -31,6 +31,17 @@
         display: inline-block;
     }
 }
+
+@media (max-width: 619px) {
+    header {
+        padding-top: 7rem;
+    }
+
+    #financial-health {
+        right: 1rem;
+    }
+}
+
 @media (min-width: 400px) {
     div#toast {
         max-width: 50px;
