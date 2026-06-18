@@ -44,6 +44,9 @@ input {
 .input-container .input-group {
     width: 100%;
 }
+.input-container .opening-balance-currency {
+    width: 45%;
+}
 .input-group {
     margin-top: 0.8rem;
 }

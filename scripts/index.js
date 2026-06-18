@@ -256,8 +256,69 @@ const Storage = {
     getTransactions(monthIndex)  {
         return Storage.get()[monthIndex].transactions
     },
-    getOpeningBalance() {
-        return localStorage.getItem("dev.finances:openingBalance") || ""
+    getOpeningBalances() {
+        const openingBalances = JSON.parse(localStorage.getItem("dev.finances:openingBalances"))
+
+        if (openingBalances) {
+            let normalized = false
+
+            for (let index = openingBalances.length; index < 12; index++) {
+                openingBalances.push(0)
+                normalized = true
+            }
+
+            if (normalized) Storage.setOpeningBalances(openingBalances)
+
+            return openingBalances
+        }
+
+        const newOpeningBalances = []
+
+        for (let index = 0; index < 12; index++) {
+            newOpeningBalances.push(0)
+        }
+
+        const oldOpeningBalance = localStorage.getItem("dev.finances:openingBalance")
+        if (oldOpeningBalance !== null) {
+            newOpeningBalances[Calendar.activeMonth()] = Number(oldOpeningBalance)
+            localStorage.removeItem("dev.finances:openingBalance")
+        }
+
+        Storage.setOpeningBalances(newOpeningBalances)
+
+        return newOpeningBalances
+    },
+    getOpeningBalance(monthIndex = Calendar.activeMonth()) {
+        return Storage.getOpeningBalances()[monthIndex] || ""
+    },
+    getOpeningBalanceCurrencies() {
+        const currencies = JSON.parse(localStorage.getItem("dev.finances:openingBalanceCurrencies"))
+
+        if (currencies) {
+            let normalized = false
+
+            for (let index = currencies.length; index < 12; index++) {
+                currencies.push("BRL")
+                normalized = true
+            }
+
+            if (normalized) Storage.setOpeningBalanceCurrencies(currencies)
+
+            return currencies
+        }
+
+        const newCurrencies = []
+
+        for (let index = 0; index < 12; index++) {
+            newCurrencies.push("BRL")
+        }
+
+        Storage.setOpeningBalanceCurrencies(newCurrencies)
+
+        return newCurrencies
+    },
+    getOpeningBalanceCurrency(monthIndex = Calendar.activeMonth()) {
+        return Storage.getOpeningBalanceCurrencies()[monthIndex] || "BRL"
     },
     getActiveMonth() {
         return localStorage.getItem("dev.finances:activeMonth") || ""
@@ -280,8 +341,21 @@ const Storage = {
         transactionsList[monthIndex].transactions = transactions
         Transaction.set(transactionsList)
     },
-    setOpeningBalance(openingBalance) {
-        localStorage.setItem("dev.finances:openingBalance", openingBalance)
+    setOpeningBalances(openingBalances) {
+        localStorage.setItem("dev.finances:openingBalances", JSON.stringify(openingBalances))
+    },
+    setOpeningBalanceCurrencies(currencies) {
+        localStorage.setItem("dev.finances:openingBalanceCurrencies", JSON.stringify(currencies))
+    },
+    setOpeningBalance(openingBalance, monthIndex = Calendar.activeMonth()) {
+        let openingBalances = Storage.getOpeningBalances()
+        openingBalances[monthIndex] = openingBalance
+        Storage.setOpeningBalances(openingBalances)
+    },
+    setOpeningBalanceCurrency(currency, monthIndex = Calendar.activeMonth()) {
+        let currencies = Storage.getOpeningBalanceCurrencies()
+        currencies[monthIndex] = currency
+        Storage.setOpeningBalanceCurrencies(currencies)
     },
     setActiveMonth(month) {
         localStorage.setItem("dev.finances:activeMonth", month)
@@ -317,6 +391,7 @@ const Transaction = {
     },
     addOpeningBalance(openingBalance) {
         Storage.setOpeningBalance(openingBalance.amount)
+        Storage.setOpeningBalanceCurrency(openingBalance.currency)
 
         App.reload()
     },
@@ -356,7 +431,7 @@ const Transaction = {
     },
     totalMonth(allValues=false) {
         const monthIndex = Calendar.activeMonth()
-        const openingBalance = Number(Storage.getOpeningBalance())
+        const openingBalance = Number(Storage.getOpeningBalance(monthIndex))
 
         const incomes = Transaction.incomes()
         const expenses = Transaction.expenses()
@@ -374,14 +449,14 @@ const Transaction = {
     },
     totalBalance() {
         const monthIndex = Calendar.activeMonth()
-        const openingBalance = Number(Storage.getOpeningBalance())
 
         let transactionsList = Storage.get()
-        let totalBalance = 0 + openingBalance
+        let totalBalance = 0
 
         for (let index = 0; index <= monthIndex; index++) {
+            const openingBalance = Number(Storage.getOpeningBalance(index))
             const totalMonth = transactionsList[index].totalMonth
-            totalBalance += totalMonth
+            totalBalance += openingBalance + totalMonth
         }
 
         return totalBalance
@@ -486,29 +561,35 @@ const DOM = {
             .checked = deposit
     },
     updateOpeningBalance() {
+        const currency = Storage.getOpeningBalanceCurrency()
+
         document
             .querySelector("#openingBalanceDisplay")
-            .innerHTML = Utils.formatCurrency(Storage.getOpeningBalance())
+            .innerHTML = Utils.formatCurrency(0, currency)
         document
             .querySelector("#opening-balance-amount")
-            .value = Utils.formatSimpleAmountToText(Storage.getOpeningBalance())
+            .value = Utils.formatSimpleAmountToText(String(Storage.getOpeningBalance()))
+        document
+            .querySelector("#opening-balance-currency")
+            .value = currency
     },
     updateBalance() {
+        const currency = Storage.getOpeningBalanceCurrency()
         const {incomes, expenses, totalMonth} = Transaction.totalMonth(true)
         const totalBalance = Transaction.totalBalance()
 
         document
             .querySelector("#incomeDisplay")
-            .innerHTML = Utils.formatCurrency(incomes)
+            .innerHTML = Utils.formatCurrency(incomes, currency)
         document
             .querySelector("#expenseDisplay")
-            .innerHTML = Utils.formatCurrency(expenses)
+            .innerHTML = Utils.formatCurrency(expenses, currency)
         document
             .querySelector("#totalMonthDisplay")
-            .innerHTML = Utils.formatCurrency(totalMonth)
+            .innerHTML = Utils.formatCurrency(totalMonth, currency)
         document
             .querySelector("#totalBalanceDisplay")
-            .innerHTML = Utils.formatCurrency(totalBalance)
+            .innerHTML = Utils.formatCurrency(totalBalance, currency)
     },
     updateCalendar() {
         const activeMonth = Calendar.activeMonth()
@@ -557,23 +638,26 @@ const DOM = {
 }
 
 const Utils = {
-    formatCurrency(value) {
+    formatCurrency(value, currency = "BRL") {
         const signal = Number(value) < 0 ? "-&nbsp;" : "+&nbsp;"
 
         value = String(value).replace(/\D/g, "")
         value = Number(value) / 100
         value = value.toLocaleString("pt-BR", {
             style: "currency",
-            currency: "BRL",
+            currency,
         })
 
         return signal + value
     },
     formatAmount(value) {
+        value = String(value).replace(",", ".")
         value = value * 100
         return Math.round(value)
     },
     formatSimpleAmountToText(value) {
+        if (!value) return ""
+
         const decimalPlace = value.slice(-2)
         const integer = value.slice(0, -2)
 
@@ -738,25 +822,36 @@ const UpdateTransactionForm = {
 }
 const OpeningBalanceForm = {
     amount: document.querySelector("input#opening-balance-amount"),
+    currency: document.querySelector("select#opening-balance-currency"),
     getValues() {
         return {
-            amount: OpeningBalanceForm.amount.value
+            amount: OpeningBalanceForm.amount.value,
+            currency: OpeningBalanceForm.currency.value
         }
     },
     validateFields() {
-        const {amount} = OpeningBalanceForm.getValues()
+        const {amount, currency} = OpeningBalanceForm.getValues()
 
         if (amount.trim() === "") {
             throw new Error("Por favor, preencha o campo!")
         }
+
+        if (isNaN(Number(String(amount).replace(",", ".")))) {
+            throw new Error("Por favor, preencha o valor corretamente!")
+        }
+
+        if (currency.trim() === "") {
+            throw new Error("Por favor, selecione uma moeda!")
+        }
     },
     formatValues() {
-        let {amount} = OpeningBalanceForm.getValues()
+        let {amount, currency} = OpeningBalanceForm.getValues()
 
         amount = Utils.formatAmount(amount)
 
         return {
-            amount
+            amount,
+            currency
         }
     },
     saveOpeningBalance(openingBalance) {
@@ -884,7 +979,8 @@ const App = {
     initAll() {
         App.initDOM()
 
-        Storage.setOpeningBalance(Storage.getOpeningBalance())
+        Storage.setOpeningBalances(Storage.getOpeningBalances())
+        Storage.setOpeningBalanceCurrencies(Storage.getOpeningBalanceCurrencies())
         Storage.set(Storage.get())
     },
     initDOM() {

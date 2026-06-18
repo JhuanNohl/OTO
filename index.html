@@ -233,9 +233,24 @@
                 <form onsubmit="OpeningBalanceForm.submit(event)">
                     <br>
 
-                    <div class="input-group">
-                        <label for="opening-balance-amount" class="sr-only">Valor</label>
-                        <input type="number" id="opening-balance-amount" name="opening-balance-amount" placeholder="0,00" step="0.01">
+                    <div class="input-container">
+                        <div class="input-group opening-balance-currency">
+                            <label for="opening-balance-currency" class="sr-only">Moeda</label>
+                            <select id="opening-balance-currency" name="opening-balance-currency">
+                                <option value="BRL">Real</option>
+                                <option value="USD">Dólar</option>
+                                <option value="EUR">Euro</option>
+                                <option value="GBP">Libra</option>
+                                <option value="ARS">Peso argentino</option>
+                                <option value="CAD">Dólar canadense</option>
+                                <option value="JPY">Iene</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="opening-balance-amount" class="sr-only">Valor</label>
+                            <input type="text" id="opening-balance-amount" name="opening-balance-amount" placeholder="0,00" inputmode="decimal">
+                        </div>
                     </div>
 
                     <small class="help-for-modal">Use o sinal - (negativo) para despesas e , (vírgula) para casas decimais</small>
