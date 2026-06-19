@@ -27,16 +27,17 @@
     <link rel="stylesheet" href="./styles/animations.css">
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,400;0,500;0,700;1,100;1,400;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,400;0,500;0,700;1,100;1,400;1,700&family=Walter+Turncoat&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <header>
         <section id="financial-health">
             <h2 class="sr-only">Saúde financeira</h2>
-            <div id="financialHealthCard" class="financial-health-card">
+            <div id="financialHealthCard" class="financial-health-card" tabindex="0" role="status" aria-live="polite">
                 <h3>
-                    <span>Saúde financeira</span>
+                    <span class="financial-health-icon" aria-hidden="true"></span>
+                    <span class="financial-health-title">Saúde financeira</span>
                     <span id="financialHealthBadge" class="financial-health-badge">Sem dados</span>
                 </h3>
                 <p id="financialHealthMessage">Registre entradas e saídas para acompanhar sua saúde financeira do mês.</p>
@@ -143,7 +144,7 @@
     <div id="create-transaction-modal" class="modal-overlay">
         <div class="modal">
             <div id="form">
-                <h2>Nova Transação</h2>
+                <h2 id="create-transaction-title">Nova Transação</h2>
 
                 <form onsubmit="Form.submit(event)">
                     <div class="input-container">
@@ -161,7 +162,7 @@
                         <input type="number" id="amount" name="amount" placeholder="0,00" step="0.01">
                     </div>
 
-                    <small class="help-for-modal">Use o sinal - (negativo) para despesas e , (vírgula) para casas decimais</small>
+                    <small id="create-transaction-help" class="help-for-modal">Informe o valor sem sinal. A opção escolhida no menu define se é gasto ou ganho.</small>
 
                     <div id="transaction-preview" class="transaction-preview neutral">
                         <strong>Prévia</strong>
@@ -269,7 +270,7 @@
                         </div>
                     </div>
 
-                    <small class="help-for-modal">Use o sinal - (negativo) para despesas e , (vírgula) para casas decimais</small>
+                    <small class="help-for-modal">Deixe vazio e salve para remover o saldo inicial deste mês. Use , (vírgula) para casas decimais</small>
 
                     <br><br>
                     <div class="input-group actions">
@@ -331,8 +332,11 @@
     <button onclick="MenuButton.toggle()" class="menu-button">
         <img src="./assets/menu.svg" alt="Menu" width="32px">
     </button>
-    <button onclick="CreateTransactionModal.open()" aria-label="Adicionar nova transação" data-label="Adicionar nova transação" class="add-transaction-button menu-options">
+    <button onclick="CreateTransactionModal.open('expense')" aria-label="Adicionar gasto" data-label="Adicionar gasto" class="add-transaction-button menu-options">
         <img src="./assets/transfer.svg" alt="Adicionar transação" width="16px">
+    </button>
+    <button onclick="CreateTransactionModal.open('income')" aria-label="Adicionar ganho não programado" data-label="Adicionar ganho não programado" class="add-income-button menu-options">
+        <img src="./assets/income.svg" alt="Adicionar ganho não programado" width="16px">
     </button>
     <button onclick="CategoryModal.open()" aria-label="Adicionar nova categoria" data-label="Adicionar nova categoria" class="add-category-button menu-options">
         <img src="./assets/category.svg" alt="Adicionar categoria" width="16px">

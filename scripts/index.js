@@ -6,16 +6,14 @@ const MenuButton = {
             .contains("active") ? MenuButton.close() : MenuButton.open()
     },
     open() {
-        const addTransactionButton = document.querySelector(".add-transaction-button")
-        const addCategoryButton = document.querySelector(".add-category-button")
-        addTransactionButton.classList.add("active")
-        addCategoryButton.classList.add("active")
+        document
+            .querySelectorAll(".menu-options")
+            .forEach(button => button.classList.add("active"))
     },
     close() {
-        const addTransactionButton = document.querySelector(".add-transaction-button")
-        const addCategoryButton = document.querySelector(".add-category-button")
-        addTransactionButton.classList.remove("active")
-        addCategoryButton.classList.remove("active")
+        document
+            .querySelectorAll(".menu-options")
+            .forEach(button => button.classList.remove("active"))
     }
 }
 const CategoryModal = {
@@ -35,13 +33,16 @@ const CategoryModal = {
     }
 }
 const CreateTransactionModal = {
-    open() {
+    type: "expense",
+    open(type = "expense") {
+        CreateTransactionModal.type = type
         document
             .querySelector(".modal-overlay")
             .classList
             .add("active")
 
         DOM.createTransactionModal()
+        DOM.updateCreateTransactionMode()
         DOM.updateTransactionPreview()
     },
     close() {
@@ -486,7 +487,7 @@ const Transaction = {
         return totalBalance
     },
     financialHealth() {
-        const incomes = Transaction.incomes()
+        const incomes = Number(Storage.getOpeningBalance()) + Transaction.incomes()
         const expenses = Math.abs(Transaction.expenses())
 
         if (incomes === 0 && expenses === 0) {
@@ -500,41 +501,35 @@ const Transaction = {
         if (incomes === 0) {
             return {
                 status: "critical",
-                title: "Crítico",
+                title: "Ruim",
                 message: "Você registrou saídas sem entradas confirmadas neste mês."
             }
         }
 
         const usagePercent = Math.round((expenses / incomes) * 100)
 
-        if (usagePercent < 50) {
+        if (usagePercent < 35) {
             return {
                 status: "excellent",
-                title: "Excelente",
+                title: "Boa",
                 message: `Você manteve seus gastos em ${usagePercent}% das entradas deste mês.`
             }
         }
 
-        if (usagePercent <= 80) {
-            return {
-                status: "healthy",
-                title: "Atenção saudável",
-                message: `Você usou ${usagePercent}% das suas entradas neste mês.`
-            }
-        }
-
-        if (usagePercent <= 100) {
+        if (usagePercent <= 70) {
             return {
                 status: "warning",
-                title: "Atenção",
-                message: `Suas saídas consumiram ${usagePercent}% das entradas deste mês.`
+                title: "Média",
+                message: `Você usou ${usagePercent}% das suas entradas neste mês.`
             }
         }
 
         return {
             status: "critical",
-            title: "Crítico",
-            message: "Suas saídas passaram das entradas deste mês."
+            title: "Ruim",
+            message: usagePercent > 100
+                ? "Suas saídas passaram das entradas deste mês."
+                : `Suas saídas consumiram ${usagePercent}% das entradas deste mês.`
         }
     }
 }
@@ -632,6 +627,13 @@ const DOM = {
         option.innerHTML = 'Selecione a categoria:'
         select.appendChild(option)
 
+        if (CreateTransactionModal.type === "income") {
+            const incomeOption = document.createElement("option")
+            incomeOption.value = "ganho não programado"
+            incomeOption.innerHTML = "Ganho não programado"
+            select.appendChild(incomeOption)
+        }
+
         for (let index = 0; index < categories.length; index++) {
             const category = categories[index]
 
@@ -641,6 +643,25 @@ const DOM = {
 
             select.appendChild(option)
         }
+
+        if (CreateTransactionModal.type === "income") {
+            select.value = "ganho não programado"
+        }
+    },
+    updateCreateTransactionMode() {
+        const isIncome = CreateTransactionModal.type === "income"
+
+        document
+            .querySelector("#create-transaction-title")
+            .innerHTML = isIncome ? "Novo ganho não programado" : "Novo gasto"
+        document
+            .querySelector("#description")
+            .placeholder = isIncome ? "Descrição do ganho" : "Descrição do gasto"
+        document
+            .querySelector("#create-transaction-help")
+            .innerHTML = isIncome
+                ? "Informe o valor sem sinal. Este ganho será somado às entradas do mês."
+                : "Informe o valor sem sinal. Este gasto será abatido do saldo e do resultado do mês."
     },
     updateTransactionModal(modalIndex) {
         const monthIndex = Calendar.activeMonth()
@@ -656,6 +677,14 @@ const DOM = {
             const option = document.createElement("option")
             option.value = category
             option.innerHTML = category
+
+            select.appendChild(option)
+        }
+
+        if (!categories.includes(category)) {
+            const option = document.createElement("option")
+            option.value = category
+            option.innerHTML = String(category)[0].toUpperCase() + String(category).substring(1)
 
             select.appendChild(option)
         }
@@ -681,7 +710,7 @@ const DOM = {
 
         document
             .querySelector("#openingBalanceDisplay")
-            .innerHTML = Utils.formatCurrency(0, currency)
+            .innerHTML = Utils.formatCurrency(Storage.getOpeningBalance(), currency)
         document
             .querySelector("#opening-balance-amount")
             .value = Utils.formatSimpleAmountToText(String(Storage.getOpeningBalance()))
@@ -740,7 +769,7 @@ const DOM = {
             return
         }
 
-        const amount = Utils.formatAmount(amountValue)
+        const amount = Form.formatAmountByType(Utils.formatAmount(amountValue))
 
         if (!deposit) {
             preview.classList.add("neutral")
@@ -897,7 +926,7 @@ const Form = {
     formatValues() {
         let {category, description, amount, date, deposit} = Form.getValues()
 
-        amount = Utils.formatAmount(amount)
+        amount = Form.formatAmountByType(Utils.formatAmount(amount))
         date   = Utils.formatDate(date)
 
         return {
@@ -907,6 +936,13 @@ const Form = {
             date,
             deposit
         }
+    },
+    formatAmountByType(amount) {
+        const unsignedAmount = Math.abs(amount)
+
+        return CreateTransactionModal.type === "income"
+            ? unsignedAmount
+            : -unsignedAmount
     },
     saveTransaction(transaction, monthIndex) {
         Transaction.add(transaction, monthIndex)
@@ -1017,11 +1053,7 @@ const OpeningBalanceForm = {
     validateFields() {
         const {amount, currency} = OpeningBalanceForm.getValues()
 
-        if (amount.trim() === "") {
-            throw new Error("Por favor, preencha o campo!")
-        }
-
-        if (isNaN(Number(String(amount).replace(",", ".")))) {
+        if (amount.trim() !== "" && isNaN(Number(String(amount).replace(",", ".")))) {
             throw new Error("Por favor, preencha o valor corretamente!")
         }
 
@@ -1032,7 +1064,7 @@ const OpeningBalanceForm = {
     formatValues() {
         let {amount, currency} = OpeningBalanceForm.getValues()
 
-        amount = Utils.formatAmount(amount)
+        amount = amount.trim() === "" ? 0 : Utils.formatAmount(amount)
 
         return {
             amount,

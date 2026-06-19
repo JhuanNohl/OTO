@@ -30,15 +30,20 @@
 .menu-button img,
 .menu-options img {
     display: block;
+    filter: brightness(0) invert(1);
+    transition: filter .3s;
 }
 
-.menu-button:hover {
+.menu-button:hover,
+.menu-button:focus-visible {
     background: var(--primary-yellow);
     border-color: var(--primary-yellow);
 }
 
 .menu-button:hover img,
-.menu-options:hover img {
+.menu-button:focus-visible img,
+.menu-options:hover img,
+.menu-options:focus-visible img {
     filter: brightness(0);
 }
 
@@ -59,7 +64,8 @@
     transform: scale(0.75);
 }
 
-.menu-options:hover {
+.menu-options:hover,
+.menu-options:focus-visible {
     background: var(--primary-yellow);
     border-color: var(--primary-yellow);
 }
@@ -120,6 +126,10 @@
 }
 
 .add-transaction-button.active {
+    transform: translateY(-10rem) scale(1);
+}
+
+.add-income-button.active {
     transform: translateY(-7rem) scale(1);
 }
 
