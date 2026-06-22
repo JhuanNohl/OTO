@@ -365,16 +365,31 @@
                 <h2>Entrar no OTO</h2>
 
                 <form onsubmit="AuthForm.submit(event)">
+                    <div class="auth-mode-switch" role="tablist" aria-label="Modo de autenticacao">
+                        <button type="button" id="auth-login-tab" class="active" onclick="AuthForm.setMode('login')">Entrar</button>
+                        <button type="button" id="auth-register-tab" onclick="AuthForm.setMode('register')">Registrar</button>
+                    </div>
+
                     <div class="input-group">
                         <label for="auth-name" class="sr-only">Nome ou apelido</label>
                         <input type="text" id="auth-name" name="auth-name" placeholder="Nome ou apelido">
                     </div>
 
-                    <small class="help-for-modal">Use um apelido para personalizar o perfil local. Seus dados seguem salvos neste navegador.</small>
+                    <div class="input-group">
+                        <label for="auth-email" class="sr-only">E-mail</label>
+                        <input type="email" id="auth-email" name="auth-email" placeholder="E-mail" autocomplete="email">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="auth-password" class="sr-only">Senha</label>
+                        <input type="password" id="auth-password" name="auth-password" placeholder="Senha" autocomplete="current-password">
+                    </div>
+
+                    <small id="auth-help" class="help-for-modal">Entre com e-mail e senha para acessar seus dados em outros dispositivos.</small>
 
                     <div class="input-group actions">
                         <a onclick="AuthModal.close()" class="button cancel">Cancelar</a>
-                        <button type="submit">Entrar</button>
+                        <button id="auth-submit-button" type="submit">Entrar</button>
                     </div>
                 </form>
             </div>
@@ -403,6 +418,8 @@
 
     <footer><small>© 2026 - O.T.O. - Todos os direitos reservados.</small></footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./scripts/supabase-config.js"></script>
     <script src="./scripts/index.js" type="text/javascript"></script>
 </body>
 </html>

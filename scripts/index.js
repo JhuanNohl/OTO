@@ -341,6 +341,7 @@ const Storage = {
     },
     set(transactions) {
         localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions))
+        CloudSync.schedulePush()
     },
     update(transactionIndex, transaction, monthIndex) {
         let transactionsList = Storage.get()
@@ -356,9 +357,11 @@ const Storage = {
     },
     setOpeningBalances(openingBalances) {
         localStorage.setItem("dev.finances:openingBalances", JSON.stringify(openingBalances))
+        CloudSync.schedulePush()
     },
     setOpeningBalanceCurrencies(currencies) {
         localStorage.setItem("dev.finances:openingBalanceCurrencies", JSON.stringify(currencies))
+        CloudSync.schedulePush()
     },
     setOpeningBalance(openingBalance, monthIndex = Calendar.activeMonth()) {
         let openingBalances = Storage.getOpeningBalances()
@@ -375,16 +378,19 @@ const Storage = {
     },
     setProfile(profile) {
         localStorage.setItem("dev.finances:profile", JSON.stringify(profile))
+        CloudSync.schedulePush()
     },
     updateCategory(category) {
         let categories = Storage.getCategories()
         categories.push(category)
         localStorage.setItem("dev.finances:categories", JSON.stringify(categories))
+        CloudSync.schedulePush()
     },
     updateCategoryBudget(category, budget) {
         let budgets = Storage.getCategoryBudgets()
         budgets[category] = budget
         localStorage.setItem("dev.finances:categoryBudgets", JSON.stringify(budgets))
+        CloudSync.schedulePush()
     },
     setCategory(category) {
         let categories = Storage.getCategories()
@@ -394,6 +400,7 @@ const Storage = {
         let budgets = Storage.getCategoryBudgets()
         delete budgets[category]
         localStorage.setItem("dev.finances:categoryBudgets", JSON.stringify(budgets))
+        CloudSync.schedulePush()
     }
 }
 const ProfileModal = {
@@ -426,6 +433,307 @@ const AuthModal = {
             .querySelector("#auth-modal")
             .classList
             .remove("active")
+    }
+}
+const OtoSupabase = {
+    client: null,
+    currentUser: null,
+    ready: false,
+    init() {
+        const config = window.OTO_SUPABASE_CONFIG || {}
+
+        if (!window.supabase || !config.url || !config.anonKey || config.url.includes("SEU-PROJETO") || config.anonKey.includes("SUA_SUPABASE")) {
+            DOM.updateAuthArea()
+            return
+        }
+
+        OtoSupabase.client = window.supabase.createClient(config.url, config.anonKey)
+        OtoSupabase.ready = true
+
+        OtoSupabase.client.auth.onAuthStateChange(async (_event, session) => {
+            OtoSupabase.currentUser = session?.user || null
+            await CloudSync.onAuthChange()
+        })
+
+        OtoSupabase.client.auth.getSession().then(async ({data}) => {
+            OtoSupabase.currentUser = data.session?.user || null
+            await CloudSync.onAuthChange()
+        })
+    },
+    isAvailable() {
+        return OtoSupabase.ready && OtoSupabase.client
+    }
+}
+const CloudSync = {
+    applyingRemote: false,
+    pushTimer: null,
+    schedulePush() {
+        if (CloudSync.applyingRemote || !OtoSupabase.currentUser || !OtoSupabase.isAvailable()) return
+
+        clearTimeout(CloudSync.pushTimer)
+        CloudSync.pushTimer = setTimeout(() => CloudSync.pushLocal(), 600)
+    },
+    async onAuthChange() {
+        const profile = Storage.getProfile()
+
+        if (!OtoSupabase.currentUser) {
+            Storage.setProfile({
+                ...profile,
+                loggedIn: false,
+                email: ""
+            })
+            DOM.updateAuthArea()
+            return
+        }
+
+        await CloudSync.pullRemote()
+        DOM.updateAuthArea()
+    },
+    async pullRemote() {
+        if (!OtoSupabase.currentUser || !OtoSupabase.isAvailable()) return
+
+        CloudSync.applyingRemote = true
+
+        try {
+            const userId = OtoSupabase.currentUser.id
+            const email = OtoSupabase.currentUser.email || ""
+            const metadataName = OtoSupabase.currentUser.user_metadata?.name || ""
+
+            let {data: profile, error: profileError} = await OtoSupabase.client
+                .from("profiles")
+                .select("*")
+                .eq("id", userId)
+                .maybeSingle()
+
+            if (profileError) throw profileError
+
+            if (!profile) {
+                profile = {
+                    id: userId,
+                    name: Storage.getProfile().name || metadataName || email,
+                    saving_goal: Storage.getProfile().savingGoal || 0
+                }
+
+                const {error} = await OtoSupabase.client
+                    .from("profiles")
+                    .upsert(profile)
+
+                if (error) throw error
+            }
+
+            const [
+                categoriesResult,
+                budgetsResult,
+                balancesResult,
+                transactionsResult
+            ] = await Promise.all([
+                OtoSupabase.client.from("categories").select("*").eq("user_id", userId).order("created_at"),
+                OtoSupabase.client.from("category_budgets").select("*, categories(name)").eq("user_id", userId),
+                OtoSupabase.client.from("opening_balances").select("*").eq("user_id", userId),
+                OtoSupabase.client.from("transactions").select("*").eq("user_id", userId).order("transaction_date")
+            ])
+
+            if (categoriesResult.error) throw categoriesResult.error
+            if (budgetsResult.error) throw budgetsResult.error
+            if (balancesResult.error) throw balancesResult.error
+            if (transactionsResult.error) throw transactionsResult.error
+
+            const hasRemoteData =
+                categoriesResult.data.length > 0 ||
+                budgetsResult.data.length > 0 ||
+                balancesResult.data.some(balance => Number(balance.amount || 0) !== 0) ||
+                transactionsResult.data.length > 0
+            const hasLocalData =
+                Storage.get().some(month => month.transactions.length > 0) ||
+                Storage.getOpeningBalances().some(balance => Number(balance || 0) !== 0)
+
+            if (!hasRemoteData && hasLocalData) {
+                localStorage.setItem("dev.finances:profile", JSON.stringify({
+                    ...Storage.getProfile(),
+                    name: profile.name || metadataName || email,
+                    savingGoal: Number(profile.saving_goal || 0),
+                    email,
+                    loggedIn: true
+                }))
+
+                CloudSync.applyingRemote = false
+                await CloudSync.pushLocal()
+                CloudSync.applyingRemote = true
+                App.reload(true)
+                return
+            }
+
+            const categories = categoriesResult.data.length
+                ? categoriesResult.data.map(category => category.name)
+                : Storage.getCategories()
+
+            const categoryBudgets = {}
+            budgetsResult.data.forEach(budget => {
+                const categoryName = budget.categories?.name
+                if (categoryName) categoryBudgets[categoryName] = Number(budget.budget || 0)
+            })
+
+            const openingBalances = Array.from({length: 12}, () => 0)
+            const currencies = Array.from({length: 12}, () => "BRL")
+
+            balancesResult.data.forEach(balance => {
+                openingBalances[balance.month_index] = Number(balance.amount || 0)
+                currencies[balance.month_index] = balance.currency || "BRL"
+            })
+
+            const transactions = Array.from({length: 12}, (_value, index) => ({
+                monthIndex: index,
+                totalMonth: 0,
+                transactions: []
+            }))
+
+            transactionsResult.data.forEach(transaction => {
+                const monthIndex = Number(transaction.month_index)
+                if (monthIndex < 0 || monthIndex > 11) return
+
+                transactions[monthIndex].transactions.push({
+                    description: transaction.description,
+                    category: transaction.category_name,
+                    amount: Number(transaction.amount),
+                    date: Utils.formatDate(transaction.transaction_date),
+                    deposit: transaction.confirmed
+                })
+            })
+
+            localStorage.setItem("dev.finances:profile", JSON.stringify({
+                ...Storage.getProfile(),
+                name: profile.name || metadataName || email,
+                savingGoal: Number(profile.saving_goal || 0),
+                email,
+                loggedIn: true
+            }))
+            localStorage.setItem("dev.finances:categories", JSON.stringify(categories))
+            localStorage.setItem("dev.finances:categoryBudgets", JSON.stringify(categoryBudgets))
+            localStorage.setItem("dev.finances:openingBalances", JSON.stringify(openingBalances))
+            localStorage.setItem("dev.finances:openingBalanceCurrencies", JSON.stringify(currencies))
+            localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions))
+
+            App.reload(true)
+        } catch (error) {
+            console.warn(error.message)
+            toastError("Não foi possível sincronizar com o Supabase.")
+        } finally {
+            CloudSync.applyingRemote = false
+        }
+    },
+    async pushLocal() {
+        if (!OtoSupabase.currentUser || !OtoSupabase.isAvailable()) return
+
+        try {
+            const userId = OtoSupabase.currentUser.id
+            const profile = Storage.getProfile()
+            const categories = Storage.getCategories()
+            const budgets = Storage.getCategoryBudgets()
+            const openingBalances = Storage.getOpeningBalances()
+            const currencies = Storage.getOpeningBalanceCurrencies()
+            const transactionMonths = Storage.get()
+
+            const {error: profileError} = await OtoSupabase.client
+                .from("profiles")
+                .upsert({
+                    id: userId,
+                    name: profile.name || OtoSupabase.currentUser.email || "",
+                    saving_goal: profile.savingGoal || 0,
+                    updated_at: new Date().toISOString()
+                })
+
+            if (profileError) throw profileError
+
+            const resetResults = await Promise.all([
+                OtoSupabase.client.from("transactions").delete().eq("user_id", userId),
+                OtoSupabase.client.from("category_budgets").delete().eq("user_id", userId),
+                OtoSupabase.client.from("opening_balances").delete().eq("user_id", userId),
+                OtoSupabase.client.from("categories").delete().eq("user_id", userId)
+            ])
+
+            resetResults.forEach(result => {
+                if (result.error) throw result.error
+            })
+
+            let remoteCategories = []
+
+            if (categories.length) {
+                const {data, error} = await OtoSupabase.client
+                    .from("categories")
+                    .insert(categories.map(category => ({
+                        user_id: userId,
+                        name: category
+                    })))
+                    .select("id,name")
+
+                if (error) throw error
+                remoteCategories = data
+            }
+
+            const categoryIdByName = {}
+            remoteCategories.forEach(category => {
+                categoryIdByName[category.name] = category.id
+            })
+
+            const transactionsPayload = []
+            transactionMonths.forEach((month, monthIndex) => {
+                month.transactions.forEach(transaction => {
+                    transactionsPayload.push({
+                        user_id: userId,
+                        description: transaction.description,
+                        category_id: categoryIdByName[transaction.category] || null,
+                        category_name: transaction.category,
+                        amount: transaction.amount,
+                        type: transaction.amount > 0 ? "income" : "expense",
+                        confirmed: transaction.deposit,
+                        transaction_date: Utils.unFormatDate(transaction.date),
+                        month_index: monthIndex
+                    })
+                })
+            })
+
+            if (transactionsPayload.length) {
+                const {error} = await OtoSupabase.client
+                    .from("transactions")
+                    .insert(transactionsPayload)
+
+                if (error) throw error
+            }
+
+            const budgetsPayload = Object.entries(budgets)
+                .filter(([_category, budget]) => Number(budget) > 0)
+                .map(([category, budget]) => ({
+                    user_id: userId,
+                    category_id: categoryIdByName[category],
+                    month_index: Calendar.activeMonth(),
+                    budget
+                }))
+                .filter(budget => budget.category_id)
+
+            if (budgetsPayload.length) {
+                const {error} = await OtoSupabase.client
+                    .from("category_budgets")
+                    .insert(budgetsPayload)
+
+                if (error) throw error
+            }
+
+            const balancesPayload = openingBalances.map((amount, monthIndex) => ({
+                user_id: userId,
+                month_index: monthIndex,
+                amount: Number(amount || 0),
+                currency: currencies[monthIndex] || "BRL"
+            }))
+
+            const {error: balancesError} = await OtoSupabase.client
+                .from("opening_balances")
+                .insert(balancesPayload)
+
+            if (balancesError) throw balancesError
+        } catch (error) {
+            console.warn(error.message)
+            toastError("Não foi possível salvar no Supabase.")
+        }
     }
 }
 
@@ -644,7 +952,7 @@ const DOM = {
 
         if (!authActions) return
 
-        if (profile.loggedIn) {
+        if (profile.loggedIn && OtoSupabase.currentUser) {
             authActions.innerHTML = `
                 <button type="button" class="auth-profile-button" onclick="ProfileModal.open()" aria-label="Abrir perfil OTO">
                     <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -677,11 +985,17 @@ const DOM = {
     },
     authModal() {
         const profile = Storage.getProfile()
-        const profileName = Utils.escapeHTML(profile.name || "Perfil sem apelido")
 
+        AuthForm.setMode("login")
         document
             .querySelector("#auth-name")
             .value = profile.name || ""
+        document
+            .querySelector("#auth-email")
+            .value = profile.email || ""
+        document
+            .querySelector("#auth-password")
+            .value = ""
     },
     addTransaction(transactions, index) {
         const deposit = transactions.deposit ? "deposit-activated" : "deposit-not-activated"
@@ -1317,32 +1631,99 @@ const ProfileForm = {
 }
 const AuthForm = {
     name: document.querySelector("input#auth-name"),
+    email: document.querySelector("input#auth-email"),
+    password: document.querySelector("input#auth-password"),
+    mode: "login",
+    setMode(mode) {
+        AuthForm.mode = mode === "register" ? "register" : "login"
+
+        document
+            .querySelector("#auth-login-tab")
+            .classList
+            .toggle("active", AuthForm.mode === "login")
+        document
+            .querySelector("#auth-register-tab")
+            .classList
+            .toggle("active", AuthForm.mode === "register")
+
+        document
+            .querySelector("#auth-name")
+            .closest(".input-group")
+            .style
+            .display = AuthForm.mode === "register" ? "block" : "none"
+        document
+            .querySelector("#auth-password")
+            .autocomplete = AuthForm.mode === "register" ? "new-password" : "current-password"
+        document
+            .querySelector("#auth-help")
+            .innerHTML = AuthForm.mode === "register"
+                ? "Crie uma conta para sincronizar suas movimentações em outras localidades e plataformas."
+                : "Entre com e-mail e senha para acessar seus dados em outros dispositivos."
+        document
+            .querySelector("#auth-submit-button")
+            .innerHTML = AuthForm.mode === "register" ? "Registrar" : "Entrar"
+    },
     getValues() {
         return {
-            name: AuthForm.name.value
+            name: AuthForm.name.value,
+            email: AuthForm.email.value,
+            password: AuthForm.password.value
         }
     },
     validateFields() {
-        const {name} = AuthForm.getValues()
+        const {name, email, password} = AuthForm.getValues()
 
-        if (name.trim() === "") {
+        if (AuthForm.mode === "register" && name.trim() === "") {
             throw new Error("Por favor, informe seu nome ou apelido!")
         }
+
+        if (email.trim() === "") {
+            throw new Error("Por favor, informe seu e-mail!")
+        }
+
+        if (password.trim().length < 6) {
+            throw new Error("A senha precisa ter pelo menos 6 caracteres.")
+        }
     },
-    submit(event) {
+    async submit(event) {
         event.preventDefault()
 
         try {
+            if (!OtoSupabase.isAvailable()) {
+                throw new Error("Configure o Supabase antes de usar login.")
+            }
+
             AuthForm.validateFields()
 
-            const {name} = AuthForm.getValues()
-            const currentProfile = Storage.getProfile()
+            const {name, email, password} = AuthForm.getValues()
+            const credentials = {
+                email: email.trim(),
+                password
+            }
 
-            Storage.setProfile({
-                ...currentProfile,
-                name: name.trim(),
-                loggedIn: true
-            })
+            if (AuthForm.mode === "register") {
+                const {data, error} = await OtoSupabase.client.auth.signUp({
+                    ...credentials,
+                    options: {
+                        data: {
+                            name: name.trim()
+                        }
+                    }
+                })
+
+                if (error) throw error
+
+                if (data.user && data.session) {
+                    await CloudSync.pullRemote()
+                    CloudSync.schedulePush()
+                } else {
+                    toastError("Cadastro criado. Confirme seu e-mail para entrar.")
+                }
+            } else {
+                const {error} = await OtoSupabase.client.auth.signInWithPassword(credentials)
+
+                if (error) throw error
+            }
 
             DOM.updateAuthArea()
             DOM.updateBalance()
@@ -1352,12 +1733,16 @@ const AuthForm = {
             toastError(error.message)
         }
     },
-    logout() {
+    async logout() {
+        if (OtoSupabase.isAvailable()) {
+            await OtoSupabase.client.auth.signOut()
+        }
         const currentProfile = Storage.getProfile()
 
         Storage.setProfile({
             ...currentProfile,
-            loggedIn: false
+            loggedIn: false,
+            email: ""
         })
 
         ProfileModal.close()
@@ -1502,6 +1887,7 @@ const App = {
     }
 }
 App.initAll()
+OtoSupabase.init()
 
 Form.category.addEventListener("change", DOM.updateTransactionPreview)
 Form.amount.addEventListener("input", DOM.updateTransactionPreview)
