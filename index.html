@@ -35,13 +35,19 @@
         <section id="financial-health">
             <h2 class="sr-only">Saúde financeira</h2>
             <div id="financialHealthCard" class="financial-health-card" tabindex="0" role="status" aria-live="polite">
-                <h3>
-                    <span class="financial-health-icon" aria-hidden="true"></span>
-                    <span class="financial-health-title">Saúde financeira</span>
-                    <span id="financialHealthBadge" class="financial-health-badge">Sem dados</span>
-                </h3>
+                <div class="oto-assistant-head">
+                    <img src="./assets/logo.png" alt="" class="oto-assistant-avatar">
+                    <h3>
+                        <span class="financial-health-title">OTO</span>
+                        <span id="financialHealthBadge" class="financial-health-badge">Sem dados</span>
+                    </h3>
+                </div>
                 <p id="financialHealthMessage">Registre entradas e saídas para acompanhar sua saúde financeira do mês.</p>
             </div>
+        </section>
+
+        <section id="auth-area" aria-label="Perfil e acesso">
+            <div id="authActions" class="auth-actions"></div>
         </section>
 
         <img id="logo" src="./assets/logo.png" alt="logo dev.finance$"/>
@@ -68,7 +74,7 @@
             <h2 class="sr-only">Calendário</h2>
             <h3 id="year-calendar"></h3>
             <div id="switch-month">
-                <button id="switch-previous-month-button" onclick="Calendar.switchMonth('previous')" class="switch-month-button" title="Voltar para o mês anterior">
+                <button id="switch-previous-month-button" onclick="Calendar.switchMonth('previous')" class="switch-month-button" aria-label="Voltar para o mês anterior" data-label="Voltar para o mês anterior">
                     <img src="./assets/arrow.svg" alt=""/>
                 </button>
 
@@ -76,7 +82,7 @@
                 <p id="current-month"></p>
                 <p id="next-month"></p>
 
-                <button id="switch-next-month-button" onclick="Calendar.switchMonth('next')" class="switch-month-button" title="Passar para o próximo mês">
+                <button id="switch-next-month-button" onclick="Calendar.switchMonth('next')" class="switch-month-button" aria-label="Passar para o próximo mês" data-label="Passar para o próximo mês">
                     <img src="./assets/arrow.svg" alt=""/>
                 </button>
             </div>
@@ -321,6 +327,59 @@
             </div>
 
             <button onclick="CategoryModal.close()" class="exit-x">X</button>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal">
+            <div id="form" class="profile-form">
+                <h2>Perfil OTO</h2>
+
+                <form onsubmit="ProfileForm.submit(event)">
+                    <div class="input-group">
+                        <label for="profile-name" class="sr-only">Nome ou apelido</label>
+                        <input type="text" id="profile-name" name="profile-name" placeholder="Nome ou apelido">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="profile-saving-goal" class="sr-only">Meta mensal de economia</label>
+                        <input type="text" id="profile-saving-goal" name="profile-saving-goal" placeholder="Meta mensal de economia" inputmode="decimal">
+                    </div>
+
+                    <div id="profile-summary" class="profile-summary"></div>
+
+                    <div class="input-group actions">
+                        <a onclick="ProfileModal.close()" class="button cancel">Cancelar</a>
+                        <button type="submit">Salvar</button>
+                    </div>
+                </form>
+            </div>
+
+            <button onclick="ProfileModal.close()" class="exit-x">X</button>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="modal-overlay">
+        <div class="modal">
+            <div id="form" class="auth-form">
+                <h2>Entrar no OTO</h2>
+
+                <form onsubmit="AuthForm.submit(event)">
+                    <div class="input-group">
+                        <label for="auth-name" class="sr-only">Nome ou apelido</label>
+                        <input type="text" id="auth-name" name="auth-name" placeholder="Nome ou apelido">
+                    </div>
+
+                    <small class="help-for-modal">Use um apelido para personalizar o perfil local. Seus dados seguem salvos neste navegador.</small>
+
+                    <div class="input-group actions">
+                        <a onclick="AuthModal.close()" class="button cancel">Cancelar</a>
+                        <button type="submit">Entrar</button>
+                    </div>
+                </form>
+            </div>
+
+            <button onclick="AuthModal.close()" class="exit-x">X</button>
         </div>
     </div>
 

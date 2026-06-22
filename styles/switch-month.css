@@ -13,7 +13,7 @@
     justify-content: space-between;
     gap: 1rem;
 
-    overflow: hidden;
+    overflow: visible;
 }
 #switch-month p {
     width: fit-content;
@@ -54,7 +54,66 @@
     align-items: center;
     justify-content: center;
 
+    position: relative;
     z-index: 50;
+}
+
+.switch-month-button img {
+    filter: brightness(0) invert(1);
+    transition: filter .12s;
+}
+
+.switch-month-button:not([disabled]):active img {
+    filter: brightness(0);
+}
+
+.switch-month-button::before {
+    content: attr(data-label);
+    min-width: max-content;
+
+    color: var(--text-dark);
+    background: var(--primary-yellow);
+    border: 1px solid var(--primary-yellow);
+    border-radius: 0.25rem;
+
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    padding: 0.55rem 0.75rem;
+
+    position: absolute;
+    bottom: calc(100% + 0.75rem);
+    left: 50%;
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 0.5rem);
+    transition: opacity .2s, transform .2s;
+}
+
+.switch-month-button::after {
+    content: "";
+
+    border-left: 0.35rem solid transparent;
+    border-right: 0.35rem solid transparent;
+    border-top: 0.35rem solid var(--primary-yellow);
+
+    position: absolute;
+    bottom: calc(100% + 0.42rem);
+    left: 50%;
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 0.5rem);
+    transition: opacity .2s, transform .2s;
+}
+
+.switch-month-button:not([disabled]):hover::before,
+.switch-month-button:not([disabled]):hover::after,
+.switch-month-button:not([disabled]):focus-visible::before,
+.switch-month-button:not([disabled]):focus-visible::after {
+    opacity: 1;
+    transform: translate(-50%, 0);
 }
 .switch-month-button:hover {
     background-color: var(--primary-yellow);
@@ -76,11 +135,21 @@
 
 
 #switch-previous-month-button {
-    border-right: 3px solid transparent;
+    border-right: 1px solid rgba(245, 245, 245, 0.16);
+}
+
+#switch-previous-month-button.switch-month-button:not([disabled]):hover,
+#switch-previous-month-button.switch-month-button:not([disabled]):focus-visible {
+    border-right-color: rgba(245, 245, 245, 0.16);
 }
 
 #switch-next-month-button {
-    border-left: 3px solid transparent;
+    border-left: 1px solid rgba(245, 245, 245, 0.16);
+}
+
+#switch-next-month-button.switch-month-button:not([disabled]):hover,
+#switch-next-month-button.switch-month-button:not([disabled]):focus-visible {
+    border-left-color: rgba(245, 245, 245, 0.16);
 }
 #switch-next-month-button img {
     transform: rotate(180deg);

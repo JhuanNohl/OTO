@@ -331,6 +331,14 @@ const Storage = {
     getCategoryBudgets() {
         return JSON.parse(localStorage.getItem("dev.finances:categoryBudgets")) || {}
     },
+    getProfile() {
+        return JSON.parse(localStorage.getItem("dev.finances:profile")) || {
+            name: "",
+            savingGoal: 0,
+            streak: 0,
+            loggedIn: false
+        }
+    },
     set(transactions) {
         localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions))
     },
@@ -365,6 +373,9 @@ const Storage = {
     setActiveMonth(month) {
         localStorage.setItem("dev.finances:activeMonth", month)
     },
+    setProfile(profile) {
+        localStorage.setItem("dev.finances:profile", JSON.stringify(profile))
+    },
     updateCategory(category) {
         let categories = Storage.getCategories()
         categories.push(category)
@@ -383,6 +394,38 @@ const Storage = {
         let budgets = Storage.getCategoryBudgets()
         delete budgets[category]
         localStorage.setItem("dev.finances:categoryBudgets", JSON.stringify(budgets))
+    }
+}
+const ProfileModal = {
+    open() {
+        document
+            .querySelector("#profile-modal")
+            .classList
+            .add("active")
+
+        DOM.profileModal()
+    },
+    close() {
+        document
+            .querySelector("#profile-modal")
+            .classList
+            .remove("active")
+    }
+}
+const AuthModal = {
+    open() {
+        document
+            .querySelector("#auth-modal")
+            .classList
+            .add("active")
+
+        DOM.authModal()
+    },
+    close() {
+        document
+            .querySelector("#auth-modal")
+            .classList
+            .remove("active")
     }
 }
 
@@ -489,6 +532,19 @@ const Transaction = {
     financialHealth() {
         const incomes = Number(Storage.getOpeningBalance()) + Transaction.incomes()
         const expenses = Math.abs(Transaction.expenses())
+        const totalMonth = Transaction.totalMonth()
+        let score = 100
+
+        if (expenses > incomes) score -= 35
+        if (expenses > incomes * 0.8) score -= 20
+        if (totalMonth < 0) score -= 25
+        if (Transaction.confirmedTransactions().length < 3) score -= 10
+        if (incomes > expenses && incomes > 0) score += 10
+
+        score = Math.max(0, Math.min(100, score))
+        const status = score >= 70 ? "healthy" : score >= 40 ? "warning" : "critical"
+        const title = Transaction.financialHealthTitle(score)
+        const usagePercent = incomes > 0 ? Math.round((expenses / incomes) * 100) : 0
 
         if (incomes === 0 && expenses === 0) {
             return {
@@ -502,40 +558,131 @@ const Transaction = {
             return {
                 status: "critical",
                 title: "Ruim",
+                score,
                 message: "Você registrou saídas sem entradas confirmadas neste mês."
             }
         }
 
-        const usagePercent = Math.round((expenses / incomes) * 100)
-
-        if (usagePercent < 35) {
-            return {
-                status: "excellent",
-                title: "Boa",
-                message: `Você manteve seus gastos em ${usagePercent}% das entradas deste mês.`
-            }
-        }
-
-        if (usagePercent <= 70) {
-            return {
-                status: "warning",
-                title: "Média",
-                message: `Você usou ${usagePercent}% das suas entradas neste mês.`
-            }
-        }
-
         return {
-            status: "critical",
-            title: "Ruim",
-            message: usagePercent > 100
-                ? "Suas saídas passaram das entradas deste mês."
-                : `Suas saídas consumiram ${usagePercent}% das entradas deste mês.`
+            status,
+            title,
+            score,
+            message: `Saúde ${title}: suas despesas representam ${usagePercent}% das receitas.`
         }
+
+    },
+    financialHealthTitle(score) {
+        if (score >= 70) return "Boa"
+        if (score >= 40) return "Média"
+        return "Ruim"
+    },
+    averageBalance() {
+        const activeMonth = Calendar.activeMonth()
+        const transactionsList = Storage.get()
+        let total = 0
+        let count = 0
+
+        for (let index = 0; index <= activeMonth; index++) {
+            const openingBalance = Number(Storage.getOpeningBalance(index))
+            const monthTotal = Number(transactionsList[index].totalMonth || 0)
+
+            if (openingBalance !== 0 || monthTotal !== 0 || Storage.getTransactions(index).length > 0) {
+                total += openingBalance + monthTotal
+                count++
+            }
+        }
+
+        return count === 0 ? 0 : Math.round(total / count)
+    },
+    confirmedTransactions() {
+        return Storage
+            .getTransactions(Calendar.activeMonth())
+            .filter(transaction => transaction.deposit)
+    },
+    activityStreak() {
+        const days = Transaction
+            .confirmedTransactions()
+            .map(transaction => Utils.unFormatDate(transaction.date))
+            .sort()
+
+        if (days.length === 0) return 0
+
+        const uniqueDays = [...new Set(days)]
+        let streak = 1
+        let currentDate = new Date(`${uniqueDays[uniqueDays.length - 1]}T00:00:00`)
+
+        for (let index = uniqueDays.length - 2; index >= 0; index--) {
+            currentDate.setDate(currentDate.getDate() - 1)
+
+            if (uniqueDays[index] !== currentDate.toISOString().slice(0, 10)) break
+
+            streak++
+        }
+
+        return streak
+    },
+    behaviorProfile() {
+        const transactions = Transaction.confirmedTransactions()
+        const incomes = Number(Storage.getOpeningBalance()) + Transaction.incomes()
+        const expenses = Math.abs(Transaction.expenses())
+        const totalMonth = Transaction.totalMonth()
+
+        if (totalMonth < 0) return "Em recuperação"
+        if (transactions.length >= 8) return "Organizado"
+        if (incomes > expenses && incomes > 0) return "Controlado"
+        if (expenses >= incomes * 0.8 && incomes > 0) return "Em atenção"
+        return "Em construção"
     }
 }
 
 const DOM = {
     transactionsContainer: document.querySelector("#data-table tbody"),
+    updateAuthArea() {
+        const authActions = document.querySelector("#authActions")
+        const profile = Storage.getProfile()
+        const profileName = Utils.escapeHTML(profile.name || "Perfil")
+
+        if (!authActions) return
+
+        if (profile.loggedIn) {
+            authActions.innerHTML = `
+                <button type="button" class="auth-profile-button" onclick="ProfileModal.open()" aria-label="Abrir perfil OTO">
+                    <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 21V19C20 16.8 18.2 15 16 15H8C5.8 15 4 16.8 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M12 11C14.2 11 16 9.2 16 7C16 4.8 14.2 3 12 3C9.8 3 8 4.8 8 7C8 9.2 9.8 11 12 11Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span>${profileName}</span>
+                </button>
+                <button type="button" class="auth-logout-button" onclick="AuthForm.logout()" aria-label="Sair">
+                    <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M10 17L15 12L10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M12 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            `
+            return
+        }
+
+        authActions.innerHTML = `
+            <button type="button" class="auth-login-button" onclick="AuthModal.open()" aria-label="Login ou registre-se">
+                <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M10 17L15 12L10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>Login / Registre-se</span>
+            </button>
+        `
+    },
+    authModal() {
+        const profile = Storage.getProfile()
+        const profileName = Utils.escapeHTML(profile.name || "Perfil sem apelido")
+
+        document
+            .querySelector("#auth-name")
+            .value = profile.name || ""
+    },
     addTransaction(transactions, index) {
         const deposit = transactions.deposit ? "deposit-activated" : "deposit-not-activated"
 
@@ -751,6 +898,33 @@ const DOM = {
             .querySelector("#financialHealthMessage")
             .innerHTML = financialHealth.message
     },
+    profileModal() {
+        const profile = Storage.getProfile()
+        const financialHealth = Transaction.financialHealth()
+        const currency = Storage.getOpeningBalanceCurrency()
+        const averageBalance = Transaction.averageBalance()
+        const behaviorProfile = Transaction.behaviorProfile()
+
+        document
+            .querySelector("#profile-name")
+            .value = profile.name
+        document
+            .querySelector("#profile-saving-goal")
+            .value = profile.savingGoal > 0 ? Utils.formatSimpleAmountToText(String(profile.savingGoal)) : ""
+
+        document
+            .querySelector("#profile-summary")
+            .innerHTML = `
+                <article class="profile-summary-card ${financialHealth.status}">
+                    <strong>${profileName}</strong>
+                    <span>Perfil: ${behaviorProfile}</span>
+                    <span>Saúde financeira: ${financialHealth.title} (${financialHealth.score || 0}/100)</span>
+                    <span>Meta de economia: ${profile.savingGoal > 0 ? Utils.formatCurrency(profile.savingGoal, currency) : "não definida"}</span>
+                    <span>Saldo médio: ${Utils.formatCurrency(averageBalance, currency)}</span>
+                    <span>Sequência: ${Transaction.activityStreak()} dia(s) com movimentações registradas</span>
+                </article>
+            `
+    },
     updateTransactionPreview() {
         const preview = document.querySelector("#transaction-preview")
         const category = Form.category.value
@@ -851,6 +1025,14 @@ const DOM = {
 }
 
 const Utils = {
+    escapeHTML(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;")
+    },
     formatCurrency(value, currency = "BRL") {
         const signal = Number(value) < 0 ? "-&nbsp;" : "+&nbsp;"
 
@@ -1089,6 +1271,100 @@ const OpeningBalanceForm = {
         }
     }
 }
+const ProfileForm = {
+    name: document.querySelector("input#profile-name"),
+    savingGoal: document.querySelector("input#profile-saving-goal"),
+    getValues() {
+        return {
+            name: ProfileForm.name.value,
+            savingGoal: ProfileForm.savingGoal.value
+        }
+    },
+    validateFields() {
+        const {savingGoal} = ProfileForm.getValues()
+
+        if (savingGoal.trim() !== "" && isNaN(Number(String(savingGoal).replace(",", ".")))) {
+            throw new Error("Por favor, preencha a meta corretamente!")
+        }
+    },
+    formatValues() {
+        const {name, savingGoal} = ProfileForm.getValues()
+        const currentProfile = Storage.getProfile()
+
+        return {
+            name: name.trim(),
+            savingGoal: savingGoal.trim() === "" ? 0 : Utils.formatAmount(savingGoal),
+            streak: currentProfile.streak || 0,
+            loggedIn: currentProfile.loggedIn || false
+        }
+    },
+    submit(event) {
+        event.preventDefault()
+
+        try {
+            ProfileForm.validateFields()
+            Storage.setProfile(ProfileForm.formatValues())
+            DOM.profileModal()
+            DOM.updateBalance()
+            DOM.updateAuthArea()
+
+            ProfileModal.close()
+        } catch (error) {
+            console.warn(error.message)
+            toastError(error.message)
+        }
+    }
+}
+const AuthForm = {
+    name: document.querySelector("input#auth-name"),
+    getValues() {
+        return {
+            name: AuthForm.name.value
+        }
+    },
+    validateFields() {
+        const {name} = AuthForm.getValues()
+
+        if (name.trim() === "") {
+            throw new Error("Por favor, informe seu nome ou apelido!")
+        }
+    },
+    submit(event) {
+        event.preventDefault()
+
+        try {
+            AuthForm.validateFields()
+
+            const {name} = AuthForm.getValues()
+            const currentProfile = Storage.getProfile()
+
+            Storage.setProfile({
+                ...currentProfile,
+                name: name.trim(),
+                loggedIn: true
+            })
+
+            DOM.updateAuthArea()
+            DOM.updateBalance()
+            AuthModal.close()
+        } catch (error) {
+            console.warn(error.message)
+            toastError(error.message)
+        }
+    },
+    logout() {
+        const currentProfile = Storage.getProfile()
+
+        Storage.setProfile({
+            ...currentProfile,
+            loggedIn: false
+        })
+
+        ProfileModal.close()
+        AuthModal.close()
+        DOM.updateAuthArea()
+    }
+}
 const CreateCategoryForm = {
     category: document.querySelector("input#create-category"),
     budget: document.querySelector("input#create-category-budget"),
@@ -1216,6 +1492,7 @@ const App = {
         DOM.updateCalendar()        // Atualiza o mês ativo
         DOM.updateOpeningBalance()  // Atualiza o valor do saldo inicial
         DOM.updateBalance()         // Atualiza o valor dos cards
+        DOM.updateAuthArea()        // Atualiza acesso e perfil
         DOM.totalCardColor()        // Atualiza a cor do card 'total'
     },
     reload(DOMOnly=false) {

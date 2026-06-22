@@ -34,11 +34,20 @@
 
 @media (max-width: 619px) {
     header {
-        padding-top: 7rem;
+        padding-top: 8.5rem;
     }
 
     #financial-health {
+        top: 4.5rem;
         right: 1rem;
+    }
+
+    #auth-area {
+        left: 1rem;
+    }
+
+    .auth-actions {
+        justify-content: flex-end;
     }
 }
 

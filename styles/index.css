@@ -16,6 +16,63 @@ header {
     margin: 0 auto;
 }
 
+#auth-area {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 6;
+}
+
+.auth-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.auth-actions button {
+    width: auto;
+    height: 2.5rem;
+
+    color: var(--text-light);
+    background: var(--black);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: 0 0.8rem;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+
+    box-shadow: 0 8px 24px var(--shadow);
+    transition: background-color .3s, border-color .3s, color .3s, transform .3s;
+}
+
+.auth-actions button:hover,
+.auth-actions button:focus-visible {
+    color: var(--text-dark);
+    background: var(--primary-yellow);
+    border-color: var(--primary-yellow);
+    transform: translateY(-1px);
+}
+
+.auth-profile-button span,
+.auth-login-button span {
+    max-width: 10rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.auth-logout-button {
+    min-width: 2.5rem;
+    padding: 0;
+}
+
 
 
 /* Titles */
@@ -320,7 +377,7 @@ button:hover {
 }
 
 .financial-health-card {
-    width: 7rem;
+    width: 8rem;
     max-width: calc(100vw - 2rem);
     min-height: 3.25rem;
 
@@ -349,9 +406,27 @@ button:hover {
 
 .financial-health-card:hover,
 .financial-health-card:focus-visible {
-    width: min(18rem, calc(100vw - 2rem));
+    width: min(21rem, calc(100vw - 2rem));
     box-shadow: 0 12px 28px var(--shadow);
     transform: translateY(-1px);
+}
+
+.oto-assistant-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.oto-assistant-avatar {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+
+    background: var(--primary-yellow);
+    border: 1px solid var(--primary-yellow);
+    border-radius: 100%;
+    object-fit: contain;
+    padding: 0.2rem;
 }
 
 .financial-health-card h3 {
@@ -408,7 +483,7 @@ button:hover {
 
 .financial-health-card:hover p,
 .financial-health-card:focus-visible p {
-    max-height: 5rem;
+    max-height: 6rem;
     margin-top: 0.45rem;
     opacity: 1;
 }
@@ -429,34 +504,58 @@ button:hover {
     gap: 0.35rem;
 }
 
-.financial-health-card.neutral .financial-health-badge,
-.financial-health-card.warning .financial-health-badge {
-    background: transparent;
+.financial-health-card.neutral .financial-health-badge {
+    color: var(--text-dark);
+    background: var(--primary-yellow);
 }
 
-.financial-health-card.neutral .financial-health-icon,
-.financial-health-card.warning .financial-health-icon {
+.financial-health-card.neutral .oto-assistant-avatar {
+    border-color: var(--primary-yellow);
+    box-shadow: 0 0 0.75rem var(--primary-yellow);
+}
+
+.financial-health-card.warning {
+    border-color: var(--primary-yellow);
+}
+
+.financial-health-card.warning .financial-health-badge {
+    color: var(--text-dark);
     background: var(--primary-yellow);
+}
+
+.financial-health-card.warning .oto-assistant-avatar {
+    border-color: var(--primary-yellow);
     box-shadow: 0 0 0.75rem var(--primary-yellow);
 }
 
 .financial-health-card.excellent .financial-health-badge,
 .financial-health-card.healthy .financial-health-badge {
-    background: transparent;
+    color: var(--text-dark);
+    background: var(--money-green);
 }
 
-.financial-health-card.excellent .financial-health-icon,
-.financial-health-card.healthy .financial-health-icon {
-    background: var(--money-green);
+.financial-health-card.excellent,
+.financial-health-card.healthy {
+    border-color: var(--money-green);
+}
+
+.financial-health-card.excellent .oto-assistant-avatar,
+.financial-health-card.healthy .oto-assistant-avatar {
+    border-color: var(--money-green);
     box-shadow: 0 0 0.75rem var(--money-green);
 }
 
 .financial-health-card.critical .financial-health-badge {
-    background: transparent;
+    color: var(--text-light);
+    background: var(--normal-red);
 }
 
-.financial-health-card.critical .financial-health-icon {
-    background: var(--normal-red);
+.financial-health-card.critical {
+    border-color: var(--normal-red);
+}
+
+.financial-health-card.critical .oto-assistant-avatar {
+    border-color: var(--normal-red);
     box-shadow: 0 0 0.75rem var(--normal-red);
 }
 

@@ -236,3 +236,68 @@ small.help-for-modal {
     top: 0;
     right: 0;
 }
+
+#profile-modal .modal,
+#auth-modal .modal {
+    width: min(90vw, 30rem);
+}
+
+#profile-modal .exit-x,
+#auth-modal .exit-x {
+    width: 2rem;
+    height: 2rem;
+
+    background-color: #00000040;
+    border-radius: 0;
+
+    padding: 0;
+
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.profile-summary {
+    margin: 1rem 0 1.5rem;
+}
+
+.profile-summary-card {
+    color: var(--text-dark);
+    background: var(--card-white);
+    border: 1px solid var(--border-light);
+    border-left: 0.35rem solid var(--primary-yellow);
+    border-radius: 0.5rem;
+
+    padding: 0.85rem 1rem;
+
+    display: grid;
+    gap: 0.4rem;
+}
+
+.profile-summary-card strong,
+.profile-summary-card span {
+    color: var(--text-dark);
+}
+
+.profile-summary-card strong {
+    font-size: 0.95rem;
+}
+
+.profile-summary-card span {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+}
+
+.profile-summary-card.excellent,
+.profile-summary-card.healthy {
+    border-left-color: var(--money-green);
+}
+
+.profile-summary-card.warning,
+.profile-summary-card.neutral {
+    border-left-color: var(--primary-yellow);
+}
+
+.profile-summary-card.critical {
+    border-left-color: var(--normal-red);
+}
