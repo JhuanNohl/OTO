@@ -14,6 +14,7 @@
     <a href="#oto-">Projeto</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
     <a href="#tecnologias-">Tecnologias</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
     <a href="#layout-">Layout</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+    <a href="#configuração-do-supabase-">Supabase</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
     <a href="#feedbacks-">Feedbacks</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
     <a href="#licença-%EF%B8%8F">Licença</a>
 </p>
@@ -31,6 +32,9 @@ O projeto está sendo desenvolvido de forma autoral a partir de um MVP encontrad
 * Botão flutuante para abertura do modal de cadastro
 * Validação de formulário com toast de erro
 * Destaque visual do card de total conforme o saldo
+* Cadastro e limite de gastos por categoria
+* Indicador de saúde financeira do mês, calculado a partir do saldo, receitas e despesas
+* Login e cadastro de usuário via Supabase, com sincronização automática dos dados na nuvem
 
 ## Tecnologias 🚀
 Esse projeto foi desenvolvido com as seguintes tecnologias:
@@ -38,6 +42,7 @@ Esse projeto foi desenvolvido com as seguintes tecnologias:
 - [HTML](https://pt.wikipedia.org/wiki/HTML)
 - [CSS](https://pt.wikipedia.org/wiki/Cascading_Style_Sheets)
 - [Javascript](https://pt.wikipedia.org/wiki/JavaScript)
+- [Supabase](https://supabase.com/) (autenticação e banco de dados)
 
 ## Layout 🚧
 #### Desktop Screenshot
@@ -69,6 +74,25 @@ $ cd OTO
 # Abra o projeto com o navegador de sua preferência
 $ index.html
 ```
+
+## Configuração do Supabase 🔑
+O OTO usa o [Supabase](https://supabase.com/) para autenticação de usuários e sincronização dos dados (perfil, categorias, limites, saldos iniciais e transações) entre dispositivos. Sem essa configuração, o app continua funcionando normalmente, mas apenas com armazenamento local (`localStorage`).
+
+1. Crie um projeto gratuito em [supabase.com](https://supabase.com/).
+2. No editor SQL do projeto, execute o script [`supabase/schema.sql`](./supabase/schema.sql) para criar as tabelas (`profiles`, `categories`, `transactions`, `category_budgets`, `opening_balances`) e as políticas de Row Level Security, garantindo que cada usuário só acesse os próprios dados.
+3. Em **Project Settings > API**, copie a **Project URL** e a **anon/public key**.
+4. Preencha essas informações em [`scripts/supabase-config.js`](./scripts/supabase-config.js):
+
+    ```js
+    window.OTO_SUPABASE_CONFIG = {
+        url: "SUA-PROJETO.supabase.co",
+        anonKey: "SUA_SUPABASE_ANON_KEY"
+    }
+    ```
+
+5. Salve o arquivo e recarregue a página. O botão de login/cadastro no cabeçalho passa a permitir criar uma conta e sincronizar os dados na nuvem automaticamente.
+
+> ⚠️ O arquivo `supabase-config.js` é carregado direto no navegador, então use apenas a chave `anon/public`, nunca a `service_role` (que dá acesso administrativo total ao banco).
 
 ## Feedbacks 💭
 O OTO ainda está em fase inicial e passa por ajustes de identidade, interface e experiência de uso.
