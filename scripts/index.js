@@ -1230,7 +1230,7 @@ const DOM = {
             .querySelector("#profile-summary")
             .innerHTML = `
                 <article class="profile-summary-card ${financialHealth.status}">
-                    <strong>${profileName}</strong>
+                    <strong>${Utils.escapeHTML(profile.name || "Perfil")}</strong>
                     <span>Perfil: ${behaviorProfile}</span>
                     <span>Saúde financeira: ${financialHealth.title} (${financialHealth.score || 0}/100)</span>
                     <span>Meta de economia: ${profile.savingGoal > 0 ? Utils.formatCurrency(profile.savingGoal, currency) : "não definida"}</span>
@@ -1444,15 +1444,10 @@ const Form = {
         Transaction.add(transaction, monthIndex)
     },
     getDataByTransaction(date) {
-        const cleanedDate  = String(date).replace(/\D/g, "")
-        let monthIndex = cleanedDate.substring(2, 4)
+        const cleanedDate = String(date).replace(/\D/g, "")
+        const month = Number(cleanedDate.substring(2, 4))
 
-        if (monthIndex.charAt(0) === '0') {
-            monthIndex = monthIndex.substring(1) // Remove o primeiro caractere "0"
-            monthIndex = String(Number(monthIndex) - 1)
-        }
-
-        return monthIndex
+        return month - 1
     },
     clearFields() {
         Form.category.value    = "-1"
@@ -1897,13 +1892,8 @@ Form.deposit.addEventListener("change", DOM.updateTransactionPreview)
 
 
 function toastError(message = "ERRO!") {
-    /*let a = document.querySelector("???").innerHTML = `
-    <div id="toast">
-    <div class="img">Icon</div>
-    <div class="description">${message}</div>
-    </div>`*/
-
     const toastId = document.querySelector("#toast")
+    toastId.querySelector(".description").textContent = message
     toastId.className = "show"
 
     setTimeout(() => {
