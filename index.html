@@ -348,6 +348,11 @@
 
                     <div id="profile-summary" class="profile-summary"></div>
 
+                    <div id="profile-budget-panel" class="profile-budget-panel">
+                        <h3>Orçamento por categoria</h3>
+                        <div class="category-budget-group"></div>
+                    </div>
+
                     <div class="input-group actions">
                         <a onclick="ProfileModal.close()" class="button cancel">Cancelar</a>
                         <button type="submit">Salvar</button>
@@ -383,6 +388,19 @@
                     <div class="input-group">
                         <label for="auth-password" class="sr-only">Senha</label>
                         <input type="password" id="auth-password" name="auth-password" placeholder="Senha" autocomplete="current-password">
+                    </div>
+
+                    <small id="auth-password-strength" class="password-strength"></small>
+
+                    <div class="input-group switch">
+                        <div class="switch-group">
+                            <div class="toggle">
+                                <input type="checkbox" id="auth-remember" name="auth-remember" checked="true">
+                            </div>
+                            <label for="auth-remember">Lembrar login</label>
+                        </div>
+
+                        <small class="help-for-modal">Mantenha marcado para continuar logado neste navegador. Desmarque em computadores compartilhados.</small>
                     </div>
 
                     <small id="auth-help" class="help-for-modal">Entre com e-mail e senha para acessar seus dados em outros dispositivos.</small>

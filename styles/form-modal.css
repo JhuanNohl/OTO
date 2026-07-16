@@ -74,6 +74,21 @@ small.help-for-modal {
     color: var(--text-dark);
     opacity: 0.65;
 }
+.password-strength {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.4rem;
+}
+.password-strength.weak {
+    color: var(--normal-red);
+}
+.password-strength.medium {
+    color: var(--primary-yellow);
+}
+.password-strength.strong {
+    color: var(--money-green);
+}
 .auth-mode-switch {
     background: var(--card-white);
     border: 1px solid var(--border-light);
@@ -287,6 +302,16 @@ small.help-for-modal {
 
 .profile-summary {
     margin: 1rem 0 1.5rem;
+}
+
+.profile-budget-panel {
+    margin: 0 0 1.5rem;
+}
+
+.profile-budget-panel h3 {
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
 }
 
 .profile-summary-card {

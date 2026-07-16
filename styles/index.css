@@ -377,7 +377,7 @@ button:hover {
 }
 
 .financial-health-card {
-    width: 8rem;
+    width: 10rem;
     max-width: calc(100vw - 2rem);
     min-height: 3.25rem;
 

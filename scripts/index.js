@@ -435,6 +435,24 @@ const AuthModal = {
             .remove("active")
     }
 }
+const AuthStorage = {
+    remember() {
+        return localStorage.getItem("dev.finances:rememberLogin") !== "false"
+    },
+    setRemember(value) {
+        localStorage.setItem("dev.finances:rememberLogin", value ? "true" : "false")
+    },
+    getItem(key) {
+        return (AuthStorage.remember() ? localStorage : sessionStorage).getItem(key)
+    },
+    setItem(key, value) {
+        (AuthStorage.remember() ? localStorage : sessionStorage).setItem(key, value)
+    },
+    removeItem(key) {
+        localStorage.removeItem(key)
+        sessionStorage.removeItem(key)
+    }
+}
 const OtoSupabase = {
     client: null,
     currentUser: null,
@@ -447,7 +465,9 @@ const OtoSupabase = {
             return
         }
 
-        OtoSupabase.client = window.supabase.createClient(config.url, config.anonKey)
+        OtoSupabase.client = window.supabase.createClient(config.url, config.anonKey, {
+            auth: {storage: AuthStorage}
+        })
         OtoSupabase.ready = true
 
         OtoSupabase.client.auth.onAuthStateChange(async (_event, session) => {
@@ -477,11 +497,17 @@ const CloudSync = {
         const profile = Storage.getProfile()
 
         if (!OtoSupabase.currentUser) {
-            Storage.setProfile({
-                ...profile,
-                loggedIn: false,
-                email: ""
-            })
+            if (profile.loggedIn) {
+                localStorage.removeItem("dev.finances:profile")
+                localStorage.removeItem("dev.finances:transactions")
+                localStorage.removeItem("dev.finances:openingBalances")
+                localStorage.removeItem("dev.finances:openingBalanceCurrencies")
+                localStorage.removeItem("dev.finances:categories")
+                localStorage.removeItem("dev.finances:categoryBudgets")
+                App.reload(true)
+                return
+            }
+
             DOM.updateAuthArea()
             return
         }
@@ -1024,12 +1050,9 @@ const DOM = {
     },
     categoryModal() {
         const categoryGroup = document.querySelector(".category-group")
-        const categoryBudgetGroup = document.querySelector(".category-budget-group")
         const categories = Storage.getCategories()
-        const budgets = Storage.getCategoryBudgets()
 
         categoryGroup.innerHTML = ""
-        categoryBudgetGroup.innerHTML = ""
         for (let index = 0; index < categories.length; index++) {
             const category = categories[index]
 
@@ -1038,6 +1061,17 @@ const DOM = {
             p.innerHTML = category
 
             categoryGroup.appendChild(p)
+        }
+
+        DOM.renderCategoryBudgetGroup(document.querySelector("#category-modal .category-budget-group"))
+    },
+    renderCategoryBudgetGroup(container) {
+        const categories = Storage.getCategories()
+        const budgets = Storage.getCategoryBudgets()
+
+        container.innerHTML = ""
+        for (let index = 0; index < categories.length; index++) {
+            const category = categories[index]
 
             const budget = Number(budgets[category] || 0)
             const spent = Transaction.categoryExpense(category)
@@ -1070,11 +1104,11 @@ const DOM = {
                     }
 
                     Storage.updateCategoryBudget(category, value === "" ? 0 : Utils.formatAmount(value))
-                    DOM.categoryModal()
+                    DOM.renderCategoryBudgetGroup(container)
                     DOM.updateTransactionPreview()
                 })
 
-            categoryBudgetGroup.appendChild(article)
+            container.appendChild(article)
         }
     },
     createTransactionModal() {
@@ -1238,6 +1272,8 @@ const DOM = {
                     <span>Sequência: ${Transaction.activityStreak()} dia(s) com movimentações registradas</span>
                 </article>
             `
+
+        DOM.renderCategoryBudgetGroup(document.querySelector("#profile-modal .category-budget-group"))
     },
     updateTransactionPreview() {
         const preview = document.querySelector("#transaction-preview")
@@ -1628,6 +1664,8 @@ const AuthForm = {
     name: document.querySelector("input#auth-name"),
     email: document.querySelector("input#auth-email"),
     password: document.querySelector("input#auth-password"),
+    remember: document.querySelector("input#auth-remember"),
+    passwordStrengthLabel: document.querySelector("#auth-password-strength"),
     mode: "login",
     setMode(mode) {
         AuthForm.mode = mode === "register" ? "register" : "login"
@@ -1657,12 +1695,42 @@ const AuthForm = {
         document
             .querySelector("#auth-submit-button")
             .innerHTML = AuthForm.mode === "register" ? "Registrar" : "Entrar"
+
+        AuthForm.updatePasswordStrength()
+    },
+    passwordStrength(password) {
+        let score = 0
+
+        if (password.length >= 6) score++
+        if (password.length >= 10) score++
+        if (/[A-Z]/.test(password)) score++
+        if (/[0-9]/.test(password)) score++
+        if (/[^A-Za-z0-9]/.test(password)) score++
+
+        if (score <= 2) return {level: "weak", label: "Fraca"}
+        if (score <= 3) return {level: "medium", label: "Média"}
+        return {level: "strong", label: "Forte"}
+    },
+    updatePasswordStrength() {
+        const label = AuthForm.passwordStrengthLabel
+
+        if (AuthForm.mode !== "register" || AuthForm.password.value === "") {
+            label.textContent = ""
+            label.className = "password-strength"
+            return
+        }
+
+        const strength = AuthForm.passwordStrength(AuthForm.password.value)
+
+        label.textContent = `Força da senha: ${strength.label}`
+        label.className = `password-strength ${strength.level}`
     },
     getValues() {
         return {
             name: AuthForm.name.value,
             email: AuthForm.email.value,
-            password: AuthForm.password.value
+            password: AuthForm.password.value,
+            remember: AuthForm.remember.checked
         }
     },
     validateFields() {
@@ -1690,11 +1758,13 @@ const AuthForm = {
 
             AuthForm.validateFields()
 
-            const {name, email, password} = AuthForm.getValues()
+            const {name, email, password, remember} = AuthForm.getValues()
             const credentials = {
                 email: email.trim(),
                 password
             }
+
+            AuthStorage.setRemember(remember)
 
             if (AuthForm.mode === "register") {
                 const {data, error} = await OtoSupabase.client.auth.signUp({
@@ -1732,17 +1802,17 @@ const AuthForm = {
         if (OtoSupabase.isAvailable()) {
             await OtoSupabase.client.auth.signOut()
         }
-        const currentProfile = Storage.getProfile()
 
-        Storage.setProfile({
-            ...currentProfile,
-            loggedIn: false,
-            email: ""
-        })
+        localStorage.removeItem("dev.finances:profile")
+        localStorage.removeItem("dev.finances:transactions")
+        localStorage.removeItem("dev.finances:openingBalances")
+        localStorage.removeItem("dev.finances:openingBalanceCurrencies")
+        localStorage.removeItem("dev.finances:categories")
+        localStorage.removeItem("dev.finances:categoryBudgets")
 
         ProfileModal.close()
         AuthModal.close()
-        DOM.updateAuthArea()
+        App.reload(true)
     }
 }
 const CreateCategoryForm = {
@@ -1888,6 +1958,8 @@ Form.category.addEventListener("change", DOM.updateTransactionPreview)
 Form.amount.addEventListener("input", DOM.updateTransactionPreview)
 Form.date.addEventListener("change", DOM.updateTransactionPreview)
 Form.deposit.addEventListener("change", DOM.updateTransactionPreview)
+
+AuthForm.password.addEventListener("input", AuthForm.updatePasswordStrength)
 
 
 
